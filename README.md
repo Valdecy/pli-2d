@@ -91,7 +91,7 @@ This makes the algorithm easier to understand than a purely textual solver log.
 
 ```text
 max = 17x1 + 12x2
-s.a
+s.t
 10x1 + 7x2 <= 40
 1x1 + 1x2 <= 5
 x1; x2 ∈ I
