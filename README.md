@@ -9,10 +9,14 @@
 </p>
 
 <p align="center">
+  <a href="#getting-started">Getting started</a> •
   <a href="#features">Features</a> •
   <a href="#how-it-works">How it works</a> •
-  <a href="#getting-started">Getting started</a> •
 </p>
+
+## Getting started
+
+[PLI-2D](https://valdecy.github.io/pli-2d/)
 
 ## Overview
 
@@ -99,9 +103,4 @@ x1; x2 ∈ I
 
 ---
 
-## Getting started
-
-```text
-[PLI-2D](https://valdecy.github.io/pli-2d/)
-```
 
