@@ -1,10 +1,6 @@
 # PLI-2D
 
 <p align="center">
-  <img src="assets/banner.svg" alt="PLI-2D banner" width="100%">
-</p>
-
-<p align="center">
   <strong>Interactive 2D visualizer for Integer Linear Programming, LP relaxation, and Branch &amp; Bound.</strong>
 </p>
 
