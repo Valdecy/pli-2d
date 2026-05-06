@@ -12,7 +12,6 @@
   <a href="#features">Features</a> •
   <a href="#how-it-works">How it works</a> •
   <a href="#getting-started">Getting started</a> •
-  <a href="#github-pages">GitHub Pages</a>
 </p>
 
 ## Overview
@@ -106,10 +105,3 @@ x1; x2 ∈ I
 https://valdecy.github.io/pli-2d/
 ```
 
-
-If you want, you can later extend this section with:
-
-- institutional affiliation
-- email
-- project page
-- paper or preprint link
