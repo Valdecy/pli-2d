@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="en">
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>PLI 2D — Visualizador Científico</title>
+<title>PLI 2D — Scientific Visualizer</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=IBM+Plex+Mono:wght@300;400;500;600&family=Syne:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -1054,14 +1054,14 @@ input[type="range"]::-moz-range-thumb {
     <div class="card" style="flex:1; overflow:auto;">
       <!-- Header -->
       <div class="sidebar-head">
-        <div class="eyebrow">Programação Linear Inteira</div>
-        <h1>PLI <em>2D</em><br>Interativo</h1>
-        <p>Visualizador com semiplanos, árvore Branch &amp; Bound, animação passo a passo e exportação. Suporta <strong>max</strong> e <strong>min</strong>, declaração de variáveis inteiras/contínuas e zoom no gráfico.</p>
+        <div class="eyebrow">Integer Linear Programming</div>
+        <h1>PLI <em>2D</em><br>Interactive</h1>
+        <p>Visualizer with half-planes, a Branch &amp; Bound tree, step-by-step animation, and export. Supports <strong>max</strong> and <strong>min</strong>, integer/continuous variable declarations, and chart zoom.</p>
       </div>
 
       <!-- Model input -->
       <div class="section">
-        <div class="section-label">Modelo</div>
+        <div class="section-label">Model</div>
         <textarea class="code-input" id="modelInput" spellcheck="false">max = 17x1 + 12x2
 s.a
 10x1 + 7x2 <= 40
@@ -1070,8 +1070,8 @@ x1; x2 ∈ I</textarea>
         <div class="error-banner" id="errorBanner"></div>
         <div class="status-banner" id="statusBanner"></div>
         <div class="btn-row">
-          <button class="btn btn-primary" id="runBtn">↻ Atualizar</button>
-          <button class="btn btn-secondary" id="demoBtn">Exemplo</button>
+          <button class="btn btn-primary" id="runBtn">↻ Update</button>
+          <button class="btn btn-secondary" id="demoBtn">Example</button>
           <button class="btn btn-secondary" id="exportPngBtn">⬇ PNG</button>
           <button class="btn btn-secondary" id="exportSvgBtn">⬇ SVG</button>
         </div>
@@ -1079,58 +1079,58 @@ x1; x2 ∈ I</textarea>
 
       <!-- Layer toggles -->
       <div class="section">
-        <div class="section-label">Camadas</div>
+        <div class="section-label">Layers</div>
         <div class="toggle-group">
           <label class="toggle-item">
             <input type="checkbox" id="showHalfspaces" checked>
             <span class="toggle-knob"></span>
-            Semiplanos das restrições
+            Constraint half-planes
           </label>
           <label class="toggle-item">
             <input type="checkbox" id="showIntegers" checked>
             <span class="toggle-knob"></span>
-            Pontos inteiros viáveis
+            Feasible integer points
           </label>
           <label class="toggle-item">
             <input type="checkbox" id="showNodeRegion" checked>
             <span class="toggle-knob"></span>
-            Região do nó atual
+            Current node region
           </label>
           <label class="toggle-item">
             <input type="checkbox" id="showVertices" checked>
             <span class="toggle-knob"></span>
-            Vértices
+            Vertices
           </label>
           <label class="toggle-item">
             <input type="checkbox" id="showLineLabels" checked>
             <span class="toggle-knob"></span>
-            Rótulos das restrições (C1, C2…)
+            Constraint labels (C1, C2…)
           </label>
         </div>
       </div>
 
       <!-- Stats -->
       <div class="section">
-        <div class="section-label">Resultados</div>
+        <div class="section-label">Results</div>
         <div class="stats-grid">
           <div class="stat-card highlight-amber">
-            <div class="stat-label">Ótimo inteiro</div>
+            <div class="stat-label">Integer optimum</div>
             <div class="stat-value" id="bestZ">—</div>
           </div>
           <div class="stat-card">
-            <div class="stat-label">Solução inteira</div>
+            <div class="stat-label">Integer solution</div>
             <div class="stat-value" style="font-size:13px;margin-top:4px" id="bestX">—</div>
           </div>
           <div class="stat-card highlight-cyan">
-            <div class="stat-label">LP relaxado</div>
+            <div class="stat-label">LP relaxation</div>
             <div class="stat-value" style="font-size:13px;margin-top:4px" id="lpX">—</div>
           </div>
           <div class="stat-card">
-            <div class="stat-label">Valor LP</div>
+            <div class="stat-label">LP value</div>
             <div class="stat-value" id="lpZ">—</div>
           </div>
           <div class="stat-card">
-            <div class="stat-label">Nós explorados</div>
+            <div class="stat-label">Nodes explored</div>
             <div class="stat-value" id="nodeCount">—</div>
           </div>
           <div class="stat-card">
@@ -1142,7 +1142,7 @@ x1; x2 ∈ I</textarea>
 
       <!-- Node info -->
       <div class="section">
-        <div class="section-label">Nó atual</div>
+        <div class="section-label">Current node</div>
         <div class="node-info-box">
           <div class="node-desc" id="nodeDesc">—</div>
           <div class="tags-wrap" id="nodeTags"></div>
@@ -1151,18 +1151,18 @@ x1; x2 ∈ I</textarea>
 
       <!-- Constraints -->
       <div class="section">
-        <div class="section-label">Restrições</div>
+        <div class="section-label">Constraints</div>
         <div class="constraint-list" id="constraintList">—</div>
       </div>
 
       <!-- Keyboard shortcuts -->
       <div class="section">
-        <div class="section-label">Atalhos</div>
+        <div class="section-label">Shortcuts</div>
         <div style="font-size:11.5px; color:var(--text2); line-height:2;">
-          <span class="kbd">←</span><span class="kbd">→</span> navegar nós<br>
-          <span class="kbd">Espaço</span> play/pause<br>
-          <span class="kbd">Home</span> primeiro nó · <span class="kbd">End</span> último<br>
-          <span class="kbd">R</span> resetar zoom · <span class="kbd">Enter</span> atualizar (no modelo)
+          <span class="kbd">←</span><span class="kbd">→</span> navigate nodes<br>
+          <span class="kbd">Space</span> play/pause<br>
+          <span class="kbd">Home</span> first node · <span class="kbd">End</span> last<br>
+          <span class="kbd">R</span> reset zoom · <span class="kbd">Enter</span> update (in model)
         </div>
       </div>
     </div>
@@ -1174,22 +1174,22 @@ x1; x2 ∈ I</textarea>
     <div class="card toolbar">
       <div class="toolbar-left">
         <div class="toolbar-title">
-          <span class="dot"></span>Plano 2D
+          <span class="dot"></span>2D Plane
         </div>
-        <div class="toolbar-hint">Ajuste a janela pelos campos de escala dos eixos e pelos botões de zoom · clique nos nós da árvore para sincronizar.</div>
+        <div class="toolbar-hint">Adjust the viewport using the axis scale fields and zoom buttons · click tree nodes to synchronize.</div>
       </div>
       <div class="toolbar-controls">
-        <button class="btn btn-secondary" id="prevBtn" style="padding:8px 12px" title="Anterior (←)">‹ Anterior</button>
-        <button class="btn btn-play" id="playBtn" title="Play/Pause (Espaço)">▶ Play</button>
-        <select class="speed-select" id="speedSelect" title="Velocidade da animação">
+        <button class="btn btn-secondary" id="prevBtn" style="padding:8px 12px" title="Previous (←)">‹ Previous</button>
+        <button class="btn btn-play" id="playBtn" title="Play/Pause (Space)">▶ Play</button>
+        <select class="speed-select" id="speedSelect" title="Animation speed">
           <option value="2200">0.5×</option>
           <option value="1100" selected>1×</option>
           <option value="600">2×</option>
           <option value="300">4×</option>
         </select>
         <input type="range" id="nodeSlider" min="0" max="0" value="0">
-        <button class="btn btn-secondary" id="nextBtn" style="padding:8px 12px" title="Próximo (→)">Próximo ›</button>
-        <span class="node-pill" id="nodeIndexPill">Nó 0 / 0</span>
+        <button class="btn btn-secondary" id="nextBtn" style="padding:8px 12px" title="Next (→)">Next ›</button>
+        <span class="node-pill" id="nodeIndexPill">Node 0 / 0</span>
       </div>
     </div>
 
@@ -1200,71 +1200,71 @@ x1; x2 ∈ I</textarea>
           <svg id="svgPlot" viewBox="0 0 1080 720" preserveAspectRatio="xMidYMid meet"></svg>
         </div>
         <div class="plot-bottompanel">
-          <!-- Linha 1, coluna 1: Legenda -->
+          <!-- Row 1, column 1: Legend -->
           <div class="legend">
-            <div class="legend-title">Legenda</div>
+            <div class="legend-title">Legend</div>
             <div class="legend-item">
               <span class="legend-swatch" style="background:rgba(0,229,160,0.25); border:1px solid rgba(0,229,160,0.5)"></span>
-              Região factível global
+              Global feasible region
             </div>
             <div class="legend-item">
               <span class="legend-swatch" style="background:rgba(0,212,255,0.2); border:1px solid rgba(0,212,255,0.4)"></span>
-              Região do nó atual
+              Current node region
             </div>
             <div class="legend-item">
               <span class="legend-swatch" style="background:#ffd166; border:1px solid #ffd166"></span>
-              Solução LP
+              LP solution
             </div>
             <div class="legend-item">
               <span class="legend-swatch" style="background:#ff4d6d; border:1px solid #ff4d6d"></span>
-              Ótimo inteiro
+              Integer optimum
             </div>
             <div class="legend-item">
               <span class="legend-swatch" style="background:#a78bfa; border:1px solid #a78bfa"></span>
-              Ponto inteiro viável
+              Feasible integer point
             </div>
           </div>
-          <!-- Linha 1, coluna 2: Escala dos eixos -->
+          <!-- Row 1, column 2: Axis scale -->
           <div class="legend axis-panel">
-            <div class="legend-title">Escala dos eixos</div>
+            <div class="legend-title">Axis scale</div>
             <div class="axis-grid">
               <div class="axis-field">
-                <label for="xMinInput">x₁ mín.</label>
+                <label for="xMinInput">x₁ min.</label>
                 <input class="axis-input" id="xMinInput" type="number" step="any" placeholder="auto">
               </div>
               <div class="axis-field">
-                <label for="xMaxInput">x₁ máx.</label>
+                <label for="xMaxInput">x₁ max.</label>
                 <input class="axis-input" id="xMaxInput" type="number" step="any" placeholder="auto">
               </div>
               <div class="axis-field">
-                <label for="yMinInput">x₂ mín.</label>
+                <label for="yMinInput">x₂ min.</label>
                 <input class="axis-input" id="yMinInput" type="number" step="any" placeholder="auto">
               </div>
               <div class="axis-field">
-                <label for="yMaxInput">x₂ máx.</label>
+                <label for="yMaxInput">x₂ max.</label>
                 <input class="axis-input" id="yMaxInput" type="number" step="any" placeholder="auto">
               </div>
             </div>
             <div class="axis-actions">
-              <button class="plot-icon-btn" id="applyAxesBtn" title="Aplicar limites manuais">Aplicar</button>
-              <button class="plot-icon-btn" id="autoAxesBtn" title="Voltar ao ajuste automático">Auto</button>
+              <button class="plot-icon-btn" id="applyAxesBtn" title="Apply manual limits">Apply</button>
+              <button class="plot-icon-btn" id="autoAxesBtn" title="Return to automatic fit">Auto</button>
             </div>
           </div>
-          <!-- Linha 2, coluna 1: Navegação -->
+          <!-- Row 2, column 1: Navigation -->
           <div class="legend">
-            <div class="legend-title">Navegação</div>
+            <div class="legend-title">Navigation</div>
             <div class="axis-actions" style="margin-top:0">
-              <button class="plot-icon-btn" id="resetZoomBtn" title="Resetar zoom (R)">⟲ Reset</button>
-              <button class="plot-icon-btn" id="zoomInBtn" title="Aproximar os dados">＋ Zoom</button>
-              <button class="plot-icon-btn" id="zoomOutBtn" title="Afastar os dados">− Zoom</button>
+              <button class="plot-icon-btn" id="resetZoomBtn" title="Reset zoom (R)">⟲ Reset</button>
+              <button class="plot-icon-btn" id="zoomInBtn" title="Zoom in on the data">＋ Zoom</button>
+              <button class="plot-icon-btn" id="zoomOutBtn" title="Zoom out from the data">− Zoom</button>
             </div>
-            <div class="plot-readout" style="margin-top:10px">Use os botões acima para ajustar o zoom. Os limites de x₁ e x₂ podem ser definidos manualmente em <strong>Escala dos eixos</strong>.</div>
+            <div class="plot-readout" style="margin-top:10px">Use the buttons above to adjust zoom. The limits of x₁ and x₂ can be set manually in <strong>Axis scale</strong>.</div>
           </div>
-          <!-- Linha 2, coluna 2: Inspeção -->
+          <!-- Row 2, column 2: Inspection -->
           <div class="legend">
-            <div class="legend-title">Inspeção</div>
-            <div class="plot-readout" id="plotReadout">Clique em qualquer região, reta, vértice ou ponto para inspecionar valores.
-Também é possível clicar no fundo para ler coordenadas e valor da função objetivo.</div>
+            <div class="legend-title">Inspection</div>
+            <div class="plot-readout" id="plotReadout">Click any region, line, vertex, or point to inspect values.
+You can also click the background to read coordinates and the objective-function value.</div>
           </div>
         </div>
       </div>
@@ -1273,8 +1273,8 @@ Também é possível clicar no fundo para ler coordenadas e valor da função ob
     <!-- Tree -->
     <div class="card tree-section">
       <div class="tree-header">
-        <div class="tree-title">Árvore Branch &amp; Bound</div>
-        <div class="tree-hint">Clique em um nó para sincronizar com o gráfico. Role horizontalmente em árvores grandes.</div>
+        <div class="tree-title">Branch &amp; Bound Tree</div>
+        <div class="tree-hint">Click a node to synchronize it with the plot. Scroll horizontally for large trees.</div>
       </div>
       <div class="tree-scroll" id="treeScroll">
         <svg id="treeSvg" class="tree-svg" preserveAspectRatio="xMinYMid meet"></svg>
@@ -1285,15 +1285,15 @@ Também é possível clicar no fundo para ler coordenadas e valor da função ob
     <div class="trace-log-grid">
       <div class="card trace-section">
         <div class="section-head">
-          <div class="title">Traço do nó</div>
-          <div class="hint">Detalhe do nó selecionado.</div>
+          <div class="title">Node trace</div>
+          <div class="hint">Details of the selected node.</div>
         </div>
         <div class="trace-box" id="traceBox">—</div>
       </div>
       <div class="card log-section">
         <div class="section-head">
-          <div class="title">Histórico</div>
-          <div class="hint">Todos os nós explorados.</div>
+          <div class="title">History</div>
+          <div class="hint">All explored nodes.</div>
         </div>
         <div class="log-box" id="logBox"></div>
       </div>
@@ -1311,10 +1311,10 @@ const EPS = 1e-9;
 const DEDUP_EPS = 1e-7;
 const COLORS = ["#00d4ff","#f5a623","#00e5a0","#ff4d6d","#a78bfa","#ffd166"];
 const STATUS = {
-  BRANCH: "ramificação",
-  INT: "solução inteira",
-  BOUND: "corte por bound",
-  INFEAS: "corte por inviabilidade (LP)"
+  BRANCH: "branching",
+  INT: "integer solution",
+  BOUND: "pruned by bound",
+  INFEAS: "pruned by infeasibility (LP)"
 };
 const STATUS_KEYS = {
   [STATUS.BRANCH]: "ramificacao",
@@ -1371,7 +1371,7 @@ function parseLinearExpr(expr){
   while(pos < s.length){
     const ch = s[pos];
     if(ch !== '+' && ch !== '-'){
-      throw new Error(`Esperado '+' ou '-' na posição ${pos} de "${expr}".`);
+      throw new Error(`Expected '+' or '-' at position ${pos} in "${expr}".`);
     }
     const sign = ch === '-' ? -1 : 1;
     pos++;
@@ -1389,14 +1389,14 @@ function parseLinearExpr(expr){
     if(varMatch){
       const idx = Number(varMatch[1]);
       if(idx !== 1 && idx !== 2){
-        throw new Error(`Variável x${idx} não suportada (apenas x1 e x2).`);
+        throw new Error(`Unsupported variable x${idx} (only x1 and x2 are supported).`);
       }
       coeffs[idx] += coeff;
       pos += varMatch[0].length;
     } else if(numMatch){
       constant += coeff;
     } else {
-      throw new Error(`Termo inválido perto de "${s.slice(pos, pos+10)}…" em "${expr}".`);
+      throw new Error(`Invalid term near "${s.slice(pos, pos+10)}…" in "${expr}".`);
     }
   }
   return { coeffs, constant };
@@ -1427,23 +1427,23 @@ function parseIntegerDecls(s){
 
 function parseModel(modelStr){
   const s = normalizeModel(modelStr).replace(/\r/g,"").replace(/\n/g," ").replace(/\s+/g," ").trim();
-  if(!s) throw new Error("Modelo vazio.");
+  if(!s) throw new Error("Empty model.");
 
-  const m = s.match(/(max|min)\s*=?\s*(.*?)\s+(?:st|s\.?t\.?|s\.?a\.?|subject\s+to|sujeito\s+a|tal\s+que)\s+(.*)/i);
-  if(!m) throw new Error("Não consegui ler o modelo. Use o formato: \"max = … s.a …\".");
+  const m = s.match(/(max|min)\s*=?\s*(.*?)\s+(?:st|s\.?t\.?|s\.?a\.?|subject\s+to|subject\s*to|sujeito\s+a|tal\s+que)\s+(.*)/i);
+  if(!m) throw new Error("Could not parse the model. Use the format: \"max = … s.t. …\".");
 
   const sense = m[1].toLowerCase();
   const objExpr = m[2].trim();
   let consPart = m[3].trim();
 
-  if(!objExpr) throw new Error("Função objetivo vazia.");
+  if(!objExpr) throw new Error("Empty objective function.");
 
   // Parse objective
   let obj;
   try {
     obj = parseLinearExpr(objExpr).coeffs;
   } catch(e){
-    throw new Error(`Erro na função objetivo: ${e.message}`);
+    throw new Error(`Error in the objective function: ${e.message}`);
   }
 
   // Extract integer declarations from constraints part
@@ -1466,11 +1466,11 @@ function parseModel(modelStr){
     try {
       parsed = parseLinearExpr(lhs);
     } catch(e){
-      throw new Error(`Erro na restrição ${consIdx+1}: ${e.message}`);
+      throw new Error(`Error in constraint ${consIdx+1}: ${e.message}`);
     }
     const { coeffs, constant } = parsed;
     if(coeffs[1] === 0 && coeffs[2] === 0){
-      throw new Error(`Restrição ${consIdx+1} sem variáveis: "${lhs} ${op} ${rhs0}".`);
+      throw new Error(`Constraint ${consIdx+1} has no variables: "${lhs} ${op} ${rhs0}".`);
     }
     const rhs = rhs0 - constant;
     const display = `${formatLinearExpr(coeffs)} ${op} ${fmt(rhs)}`;
@@ -1493,14 +1493,14 @@ function parseModel(modelStr){
   }
 
   if(cons.length === 0){
-    throw new Error("Nenhuma restrição reconhecida. Use formato \"a x1 + b x2 <= c\".");
+    throw new Error("No constraints were recognized. Use the format \"a x1 + b x2 <= c\".");
   }
 
   // Final check: any leftover non-empty content?
   const leftover = consPart.replace(consRegex, '').replace(/[,;\s]/g, '');
   if(leftover){
     // Only warn — don't fail. Most likely it's a stray declaration we already handled.
-    console.warn("Conteúdo não reconhecido nas restrições:", leftover);
+    console.warn("Unrecognized content in constraints:", leftover);
   }
 
   return { sense, obj, cons, displayCons, isInt };
@@ -1636,7 +1636,7 @@ function runBB(model){
   const rootRes = lpRelax(model, rootBounds);
   // DFS stack with prelim LP attached to avoid re-solving
   const stack = [{
-    id: 0, parent: null, depth: 0, branch: "raiz",
+    id: 0, parent: null, depth: 0, branch: "root",
     bounds: rootBounds, prelimRes: rootRes
   }];
 
@@ -2017,11 +2017,11 @@ function describeClickedCoordinate(x, y, node, hsNode){
   const nearest = { x: Math.round(x), y: Math.round(y) };
   const nearestFeasible = feasible(nearest, hsNode);
   return [
-    `Ponto selecionado: x₁=${fmt(x)}, x₂=${fmt(y)}`,
+    `Selected point: x₁=${fmt(x)}, x₂=${fmt(y)}`,
     `Objetivo (${currentModel.sense}): z=${fmt(z)}`,
-    `Região global: ${inRoot ? "factível" : "fora da região"}`,
-    `Região do nó ${node.id}: ${inNode ? "factível" : "fora da região"}`,
-    `Inteiro mais próximo: (${nearest.x}, ${nearest.y}) · ${nearestFeasible ? "factível neste nó" : "não factível neste nó"}`
+    `Global region: ${inRoot ? "feasible" : "outside the region"}`,
+    `Region of node ${node.id}: ${inNode ? "feasible" : "outside the region"}`,
+    `Nearest integer: (${nearest.x}, ${nearest.y}) · ${nearestFeasible ? "feasible in this node" : "not feasible in this node"}`
   ].join("\n");
 }
 
@@ -2118,19 +2118,19 @@ function drawPlot(){
     currentModel.cons.forEach((h) => {
       const clipped = clipPolygonWithHalfspace(canvasRect, h);
       if(clipped.length >= 3){
-        const info = `Semiplano da restrição
+        const info = `Constraint half-plane
 ${h.raw}`;
-        out.push(`<polygon class="inspectable" data-click-info="${escapeAttr(info)}" points="${clipped.map(p=>`${X(p.x)},${Y(p.y)}`).join(" ")}" fill="${h.color}18" stroke="none"><title>Semiplano: ${escapeXml(h.raw)}</title></polygon>`);
+        out.push(`<polygon class="inspectable" data-click-info="${escapeAttr(info)}" points="${clipped.map(p=>`${X(p.x)},${Y(p.y)}`).join(" ")}" fill="${h.color}18" stroke="none"><title>Half-plane: ${escapeXml(h.raw)}</title></polygon>`);
       }
     });
   }
 
   if(polyRoot.length >= 3){
-    out.push(`<polygon class="inspectable" data-click-info="${escapeAttr(`Região factível global\nPolígono do relaxamento linear na raiz.`)}" points="${polyRoot.map(p=>`${X(p.x)},${Y(p.y)}`).join(" ")}" fill="rgba(0,229,160,0.15)" stroke="rgba(0,229,160,0.6)" stroke-width="1.8"/>`);
+    out.push(`<polygon class="inspectable" data-click-info="${escapeAttr(`Global feasible region\nPolígono do relaxamento linear na root.`)}" points="${polyRoot.map(p=>`${X(p.x)},${Y(p.y)}`).join(" ")}" fill="rgba(0,229,160,0.15)" stroke="rgba(0,229,160,0.6)" stroke-width="1.8"/>`);
   }
 
   if(showNodeRegion && polyNode.length >= 3){
-    out.push(`<polygon class="inspectable" data-click-info="${escapeAttr(`Região do nó ${node.id}
+    out.push(`<polygon class="inspectable" data-click-info="${escapeAttr(`Region of node ${node.id}
 ${node.branch}
 ${node.status}`)}" points="${polyNode.map(p=>`${X(p.x)},${Y(p.y)}`).join(" ")}" fill="rgba(0,212,255,0.12)" stroke="rgba(0,212,255,0.7)" stroke-dasharray="8 5" stroke-width="2"/>`);
   }
@@ -2138,7 +2138,7 @@ ${node.status}`)}" points="${polyNode.map(p=>`${X(p.x)},${Y(p.y)}`).join(" ")}" 
   currentModel.cons.forEach((h, i) => {
     const seg = lineSegmentForHalfspace(h, domain.xmin, domain.xmax, domain.ymin, domain.ymax);
     if(!seg) return;
-    out.push(`<line class="inspectable" data-click-info="${escapeAttr(`Restrição C${i+1}
+    out.push(`<line class="inspectable" data-click-info="${escapeAttr(`Constraint C${i+1}
 ${h.raw}`)}" x1="${X(seg[0].x)}" y1="${Y(seg[0].y)}" x2="${X(seg[1].x)}" y2="${Y(seg[1].y)}" stroke="${h.color}" stroke-width="2.5" opacity="0.9"><title>${escapeXml(h.raw)}</title></line>`);
     if(showLineLabels){
       const p = seg[1];
@@ -2152,13 +2152,13 @@ ${h.raw}`)}" x1="${X(seg[0].x)}" y1="${Y(seg[0].y)}" x2="${X(seg[1].x)}" y2="${Y
   });
 
   const b = node.bounds;
-  if(b.x1min != null) out.push(`<line class="inspectable" data-click-info="${escapeAttr(`Limite do nó
+  if(b.x1min != null) out.push(`<line class="inspectable" data-click-info="${escapeAttr(`Node bound
 x1 ≥ ${b.x1min}`)}" x1="${X(b.x1min)}" y1="${Y(domain.ymin)}" x2="${X(b.x1min)}" y2="${Y(domain.ymax)}" stroke="rgba(255,255,255,0.35)" stroke-width="1.5" stroke-dasharray="5 4"><title>x1 ≥ ${b.x1min}</title></line>`);
-  if(b.x1max != null) out.push(`<line class="inspectable" data-click-info="${escapeAttr(`Limite do nó
+  if(b.x1max != null) out.push(`<line class="inspectable" data-click-info="${escapeAttr(`Node bound
 x1 ≤ ${b.x1max}`)}" x1="${X(b.x1max)}" y1="${Y(domain.ymin)}" x2="${X(b.x1max)}" y2="${Y(domain.ymax)}" stroke="rgba(255,255,255,0.35)" stroke-width="1.5" stroke-dasharray="5 4"><title>x1 ≤ ${b.x1max}</title></line>`);
-  if(b.x2min != null) out.push(`<line class="inspectable" data-click-info="${escapeAttr(`Limite do nó
+  if(b.x2min != null) out.push(`<line class="inspectable" data-click-info="${escapeAttr(`Node bound
 x2 ≥ ${b.x2min}`)}" x1="${X(domain.xmin)}" y1="${Y(b.x2min)}" x2="${X(domain.xmax)}" y2="${Y(b.x2min)}" stroke="rgba(255,255,255,0.35)" stroke-width="1.5" stroke-dasharray="5 4"><title>x2 ≥ ${b.x2min}</title></line>`);
-  if(b.x2max != null) out.push(`<line class="inspectable" data-click-info="${escapeAttr(`Limite do nó
+  if(b.x2max != null) out.push(`<line class="inspectable" data-click-info="${escapeAttr(`Node bound
 x2 ≤ ${b.x2max}`)}" x1="${X(domain.xmin)}" y1="${Y(b.x2max)}" x2="${X(domain.xmax)}" y2="${Y(b.x2max)}" stroke="rgba(255,255,255,0.35)" stroke-width="1.5" stroke-dasharray="5 4"><title>x2 ≤ ${b.x2max}</title></line>`);
 
   if(showIntegers){
@@ -2174,7 +2174,7 @@ x2 ≤ ${b.x2max}`)}" x1="${X(domain.xmin)}" y1="${Y(b.x2max)}" x2="${X(domain.x
         const fill = isBest ? "url(#incumbentGrad)" : "#a78bfa";
         const r = isBest ? 7 : 4.5;
         const strokeColor = isBest ? "rgba(255,150,170,0.8)" : "rgba(200,190,255,0.5)";
-        const info = `(x₁,x₂)=(${p.x},${p.y})\nz=${fmt(objective(p,currentModel.obj))}${isBest ? '\nMelhor solução inteira atual' : ''}`;
+        const info = `(x₁,x₂)=(${p.x},${p.y})\nz=${fmt(objective(p,currentModel.obj))}${isBest ? '\nCurrent best integer solution' : ''}`;
         out.push(`<circle class="inspectable" data-click-info="${escapeAttr(info)}" data-plot-x="${p.x}" data-plot-y="${p.y}" cx="${X(p.x)}" cy="${Y(p.y)}" r="${r}" fill="${fill}" stroke="${strokeColor}" stroke-width="${isBest?1.8:1}" ${isBest?'filter="url(#glow-sm)"':''}>
           <title>(x₁,x₂)=(${p.x},${p.y}) | z=${fmt(objective(p,currentModel.obj))}</title>
         </circle>`);
@@ -2184,30 +2184,30 @@ x2 ≤ ${b.x2max}`)}" x1="${X(domain.xmin)}" y1="${Y(b.x2max)}" x2="${X(domain.x
 
   if(showVertices){
     polyNode.forEach(p => {
-      out.push(`<circle class="inspectable" data-click-info="${escapeAttr(`Vértice do nó ${node.id}
+      out.push(`<circle class="inspectable" data-click-info="${escapeAttr(`Vertex of node ${node.id}
 (${fmt(p.x)}, ${fmt(p.y)})
 z=${fmt(objective(p,currentModel.obj))}`)}" data-plot-x="${p.x}" data-plot-y="${p.y}" cx="${X(p.x)}" cy="${Y(p.y)}" r="5" fill="rgba(255,255,255,0.85)" stroke="#05080f" stroke-width="1.5">
-        <title>Vértice (${fmt(p.x)}, ${fmt(p.y)})</title>
+        <title>Vertex (${fmt(p.x)}, ${fmt(p.y)})</title>
       </circle>`);
     });
   }
 
   if(root){
-    out.push(`<circle class="inspectable" data-click-info="${escapeAttr(`Solução LP da raiz
+    out.push(`<circle class="inspectable" data-click-info="${escapeAttr(`Root LP solution
 (${fmt(root.point.x)}, ${fmt(root.point.y)})
 z=${fmt(root.value)}`)}" data-plot-x="${root.point.x}" data-plot-y="${root.point.y}" cx="${X(root.point.x)}" cy="${Y(root.point.y)}" r="9" fill="url(#lpGrad)" stroke="rgba(255,230,100,0.8)" stroke-width="2" filter="url(#glow)">
-      <title>Solução LP: (${fmt(root.point.x)}, ${fmt(root.point.y)}) | z=${fmt(root.value)}</title>
+      <title>LP solution: (${fmt(root.point.x)}, ${fmt(root.point.y)}) | z=${fmt(root.value)}</title>
     </circle>`);
     out.push(`<text x="${X(root.point.x)+14}" y="${Y(root.point.y)-10}" fill="#ffe566" font-size="12" font-weight="700" font-family="'IBM Plex Mono',monospace">LP</text>`);
   }
 
   if(currentRun.incumbent.point){
-    out.push(`<circle class="inspectable" data-click-info="${escapeAttr(`Melhor solução inteira
+    out.push(`<circle class="inspectable" data-click-info="${escapeAttr(`Best integer solution
 (${fmt(currentRun.incumbent.point.x)}, ${fmt(currentRun.incumbent.point.y)})
 z=${fmt(currentRun.incumbent.value)}`)}" data-plot-x="${currentRun.incumbent.point.x}" data-plot-y="${currentRun.incumbent.point.y}" cx="${X(currentRun.incumbent.point.x)}" cy="${Y(currentRun.incumbent.point.y)}" r="11" fill="url(#incumbentGrad)" stroke="rgba(255,120,140,0.9)" stroke-width="2.5" filter="url(#glow)">
-      <title>Ótimo inteiro: (${fmt(currentRun.incumbent.point.x)}, ${fmt(currentRun.incumbent.point.y)}) | z=${fmt(currentRun.incumbent.value)}</title>
+      <title>Integer optimum: (${fmt(currentRun.incumbent.point.x)}, ${fmt(currentRun.incumbent.point.y)}) | z=${fmt(currentRun.incumbent.value)}</title>
     </circle>`);
-    out.push(`<text x="${X(currentRun.incumbent.point.x)+16}" y="${Y(currentRun.incumbent.point.y)+5}" fill="rgba(255,120,140,0.95)" font-size="12" font-weight="700" font-family="'IBM Plex Mono',monospace">Ótimo</text>`);
+    out.push(`<text x="${X(currentRun.incumbent.point.x)+16}" y="${Y(currentRun.incumbent.point.y)+5}" fill="rgba(255,120,140,0.95)" font-size="12" font-weight="700" font-family="'IBM Plex Mono',monospace">Optimum</text>`);
   }
 
   if(plotSelection && plotSelection.x != null && plotSelection.y != null){
@@ -2217,8 +2217,8 @@ z=${fmt(currentRun.incumbent.value)}`)}" data-plot-x="${currentRun.incumbent.poi
   }
 
   const info = node.res
-    ? `Nó ${node.id}  ·  ${node.branch}  ·  x*=(${fmt(node.res.point.x)}, ${fmt(node.res.point.y)})  ·  z*=${fmt(node.res.value)}  ·  ${node.status}`
-    : `Nó ${node.id}  ·  ${node.branch}  ·  ${node.status}`;
+    ? `Node ${node.id}  ·  ${node.branch}  ·  x*=(${fmt(node.res.point.x)}, ${fmt(node.res.point.y)})  ·  z*=${fmt(node.res.value)}  ·  ${node.status}`
+    : `Node ${node.id}  ·  ${node.branch}  ·  ${node.status}`;
   out.push(`<rect x="18" y="16" width="720" height="40" rx="10" fill="rgba(5,8,15,0.82)" stroke="rgba(255,255,255,0.08)"/>`);
   out.push(`<text x="34" y="41" fill="rgba(232,238,255,0.9)" font-size="13" font-weight="600" font-family="'IBM Plex Mono',monospace">${escapeXml(info)}</text>`);
 
@@ -2348,17 +2348,17 @@ function drawTree(){
    ═══════════════════════════════════════════════════════════ */
 function buildTraceText(n){
   const lines = [];
-  lines.push(`Nó ${n.id} (${n.branch})`);
+  lines.push(`Node ${n.id} (${n.branch})`);
   lines.push(`Status: ${n.status}`);
   lines.push(`Bounds: x1∈[${n.bounds.x1min ?? "-∞"}, ${n.bounds.x1max ?? "+∞"}], x2∈[${n.bounds.x2min ?? "-∞"}, ${n.bounds.x2max ?? "+∞"}]`);
   if(n.res){
-    lines.push(`LP do nó: x*=(${fmt(n.res.point.x)}, ${fmt(n.res.point.y)}), z*=${fmt(n.res.value)}`);
+    lines.push(`Node LP: x*=(${fmt(n.res.point.x)}, ${fmt(n.res.point.y)}), z*=${fmt(n.res.value)}`);
   }
-  if(n.branchOn) lines.push(`Ramificação: ${n.branchOn}`);
-  if(n.newIncumbent) lines.push(`Resultado: este nó atualizou o incumbente.`);
-  if(n.status === STATUS.BOUND) lines.push(`Motivo: o bound LP do nó não supera a melhor solução inteira.`);
-  if(n.status === STATUS.INFEAS) lines.push(`Motivo: a região do nó ficou vazia no relaxamento linear.`);
-  if(n.status === STATUS.INT) lines.push(`Motivo: a solução LP já satisfaz as exigências de integralidade.`);
+  if(n.branchOn) lines.push(`Branching: ${n.branchOn}`);
+  if(n.newIncumbent) lines.push(`Result: this node updated the incumbent.`);
+  if(n.status === STATUS.BOUND) lines.push(`Reason: the node's LP bound does not improve on the best integer solution.`);
+  if(n.status === STATUS.INFEAS) lines.push(`Reason: the node region became empty in the linear relaxation.`);
+  if(n.status === STATUS.INT) lines.push(`Reason: the LP solution already satisfies the integrality requirements.`);
   return lines.join("\n");
 }
 
@@ -2383,19 +2383,19 @@ function drawLog(){
 function updatePanels(){
   const node = currentRun.nodes[currentNode];
   document.getElementById("nodeDesc").textContent = node.res
-    ? `Nó ${node.id} · ${node.branch} · x*=(${fmt(node.res.point.x)}, ${fmt(node.res.point.y)}) · z*=${fmt(node.res.value)} · ${node.status}`
-    : `Nó ${node.id} · ${node.branch} · ${node.status}`;
+    ? `Node ${node.id} · ${node.branch} · x*=(${fmt(node.res.point.x)}, ${fmt(node.res.point.y)}) · z*=${fmt(node.res.value)} · ${node.status}`
+    : `Node ${node.id} · ${node.branch} · ${node.status}`;
 
   const tags = [];
   const cls = STATUS_KEYS[node.status] || "";
   tags.push(`<span class="tag status-${cls}">${node.status}</span>`);
   if(node.branchOn) tags.push(`<span class="tag">${escapeXml(node.branchOn)}</span>`);
-  if(node.newIncumbent) tags.push(`<span class="tag" style="background:rgba(0,229,160,0.1);border-color:rgba(0,229,160,0.3);color:var(--green)">★ novo incumbente</span>`);
+  if(node.newIncumbent) tags.push(`<span class="tag" style="background:rgba(0,229,160,0.1);border-color:rgba(0,229,160,0.3);color:var(--green)">★ new incumbent</span>`);
   tags.push(`<span class="tag">x1 ∈ [${node.bounds.x1min ?? "-∞"}, ${node.bounds.x1max ?? "+∞"}] · x2 ∈ [${node.bounds.x2min ?? "-∞"}, ${node.bounds.x2max ?? "+∞"}]</span>`);
 
   document.getElementById("nodeTags").innerHTML = tags.join("");
   document.getElementById("traceBox").textContent = buildTraceText(node);
-  document.getElementById("nodeIndexPill").textContent = `Nó ${currentNode} / ${Math.max(0, currentRun.nodes.length-1)}`;
+  document.getElementById("nodeIndexPill").textContent = `Node ${currentNode} / ${Math.max(0, currentRun.nodes.length-1)}`;
   document.getElementById("prevBtn").disabled = currentNode === 0;
   document.getElementById("nextBtn").disabled = currentNode === currentRun.nodes.length - 1;
   document.getElementById("nodeSlider").value = String(currentNode);
@@ -2462,7 +2462,7 @@ function render(modelText){
     lastAutoPlotDomain = inferPlotDomain(model, currentRun.nodes[0], root);
     updateAxisInputPlaceholders(lastAutoPlotDomain);
   }
-  setPlotReadout("Clique em qualquer região, reta, vértice ou ponto para inspecionar valores.\nTambém é possível clicar no fundo para ler coordenadas e valor da função objetivo.");
+  setPlotReadout("Click any region, line, vertex, or point to inspect values.\nYou can also click the background to read coordinates and the objective-function value.");
 
   // Stats
   document.getElementById("bestZ").textContent = currentRun.incumbent.point ? fmt(currentRun.incumbent.value) : "—";
@@ -2498,11 +2498,11 @@ function render(modelText){
 
   // Solution status banners
   if(!root){
-    showStatus("Modelo inviável: a região factível está vazia.", "error");
+    showStatus("Infeasible model: the feasible region is empty.", "error");
   } else if(!currentRun.incumbent.point){
     const declMsg = (model.isInt[1] || model.isInt[2])
-      ? "Sem solução inteira viável dentro da região factível."
-      : "Nenhuma solução encontrada.";
+      ? "No feasible integer solution inside the feasible region."
+      : "No solution found.";
     showStatus(declMsg, "warn");
   }
 
@@ -2601,8 +2601,8 @@ function panPlotBy(dx, dy){
 (function setupPanZoom(){
   // Interações de pan/zoom diretas no SVG (wheel, drag do mouse, pinça touch)
   // foram intencionalmente removidas. O gráfico só pode ser controlado por:
-  //   • Campos de "Escala dos eixos" (xMin/xMax/yMin/yMax)
-  //   • Botões de Navegação (Reset, ＋ Zoom, − Zoom)
+  //   • Campos de "Axis scale" (xMin/xMax/yMin/yMax)
+  //   • Botões de Navigation (Reset, ＋ Zoom, − Zoom)
   // O clique no SVG continua ativo para inspeção (bindPlotInspector).
 })();
 
@@ -2772,8 +2772,8 @@ document.addEventListener("keydown", (e) => {
 try {
   render(document.getElementById("modelInput").value);
 } catch(e){
-  console.error("Erro na renderização inicial:", e);
-  showError("Erro ao iniciar: " + e.message);
+  console.error("Initial render error:", e);
+  showError("Startup error: " + e.message);
 }
 </script>
 </body>
