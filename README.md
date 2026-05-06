@@ -102,6 +102,6 @@ x1; x2 ∈ I
 ## Getting started
 
 ```text
-https://valdecy.github.io/pli-2d/
+[PLI-2D](https://valdecy.github.io/pli-2d/)
 ```
 
