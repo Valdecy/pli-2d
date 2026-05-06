@@ -1,0 +1,2780 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>PLI 2D — Visualizador Científico</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=IBM+Plex+Mono:wght@300;400;500;600&family=Syne:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #05080f;
+  --bg2: #080c17;
+  --panel: rgba(10, 14, 28, 0.95);
+  --panel2: rgba(14, 19, 38, 0.9);
+  --panel3: rgba(18, 24, 48, 0.85);
+  --border: rgba(255, 255, 255, 0.06);
+  --border2: rgba(255, 255, 255, 0.1);
+  --text: #e8eeff;
+  --text2: #a8b4d8;
+  --text3: #9aa6cf; /* bumped from #6a7aac for WCAG AA */
+  --amber: #f5a623;
+  --amber-soft: rgba(245, 166, 35, 0.15);
+  --amber-glow: rgba(245, 166, 35, 0.25);
+  --cyan: #00d4ff;
+  --cyan-soft: rgba(0, 212, 255, 0.12);
+  --cyan-glow: rgba(0, 212, 255, 0.2);
+  --green: #00e5a0;
+  --green-soft: rgba(0, 229, 160, 0.12);
+  --red: #ff4d6d;
+  --red-soft: rgba(255, 77, 109, 0.12);
+  --purple: #a78bfa;
+  --purple-soft: rgba(167, 139, 250, 0.12);
+  --yellow: #ffd166;
+  --shadow: 0 4px 24px rgba(0,0,0,0.5), 0 1px 4px rgba(0,0,0,0.4);
+  --shadow-lg: 0 8px 48px rgba(0,0,0,0.6), 0 2px 8px rgba(0,0,0,0.4);
+  --r: 16px;
+  --r-sm: 10px;
+  --r-xs: 7px;
+  --font-display: 'DM Serif Display', Georgia, serif;
+  --font-mono: 'IBM Plex Mono', 'Cascadia Code', monospace;
+  --font-ui: 'Syne', 'Segoe UI', sans-serif;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { height: 100%; }
+
+body {
+  min-height: 100vh;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-ui);
+  overflow-x: hidden;
+  position: relative;
+}
+
+/* ── Ambient background ── */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 80% 50% at 15% 0%, rgba(245, 166, 35, 0.04) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 40% at 85% 100%, rgba(0, 212, 255, 0.04) 0%, transparent 60%),
+    radial-gradient(ellipse 50% 60% at 50% 50%, rgba(10, 14, 28, 0.8) 0%, transparent 100%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image:
+    repeating-linear-gradient(0deg, transparent, transparent 39px, rgba(255,255,255,0.012) 40px),
+    repeating-linear-gradient(90deg, transparent, transparent 39px, rgba(255,255,255,0.012) 40px);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ── Layout ── */
+.app {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: 360px 1fr;
+  gap: 16px;
+  padding: 16px;
+  min-height: 100vh;
+  animation: fadeIn 0.6s ease both;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Glass card ── */
+.card {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(20px);
+  position: relative;
+  overflow: hidden;
+  transition: border-color 0.3s ease;
+}
+
+.card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: var(--r);
+  background: linear-gradient(135deg, rgba(255,255,255,0.025) 0%, transparent 60%);
+  pointer-events: none;
+}
+
+.card:hover {
+  border-color: rgba(255,255,255,0.1);
+}
+
+/* ── Sidebar ── */
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.sidebar-head {
+  padding: 24px 22px 20px;
+  border-bottom: 1px solid var(--border);
+}
+
+.sidebar-head .eyebrow {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--amber);
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.sidebar-head .eyebrow::before {
+  content: '';
+  display: block;
+  width: 20px;
+  height: 1px;
+  background: var(--amber);
+}
+
+.sidebar-head h1 {
+  font-family: var(--font-display);
+  font-size: 26px;
+  font-weight: 400;
+  color: var(--text);
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+}
+
+.sidebar-head h1 em {
+  font-style: italic;
+  color: var(--amber);
+}
+
+.sidebar-head p {
+  margin-top: 8px;
+  font-size: 12px;
+  color: var(--text3);
+  line-height: 1.6;
+  font-weight: 400;
+}
+
+/* ── Section ── */
+.section {
+  padding: 18px 22px;
+}
+
+.section + .section {
+  border-top: 1px solid var(--border);
+}
+
+.section-label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--text3);
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.section-label::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
+/* ── Textarea ── */
+.code-input {
+  width: 100%;
+  min-height: 150px;
+  background: rgba(0,0,0,0.35);
+  color: var(--cyan);
+  border: 1px solid var(--border2);
+  border-radius: var(--r-sm);
+  padding: 14px;
+  resize: vertical;
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  line-height: 1.65;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  caret-color: var(--amber);
+}
+
+.code-input:focus {
+  border-color: rgba(245, 166, 35, 0.4);
+  box-shadow: 0 0 0 3px rgba(245, 166, 35, 0.06), inset 0 0 20px rgba(0, 212, 255, 0.02);
+}
+
+.code-input.has-error {
+  border-color: rgba(255, 77, 109, 0.5);
+  box-shadow: 0 0 0 3px rgba(255, 77, 109, 0.08);
+}
+
+/* ── Error banner ── */
+.error-banner {
+  margin-top: 10px;
+  padding: 10px 12px;
+  background: var(--red-soft);
+  border: 1px solid rgba(255, 77, 109, 0.3);
+  border-radius: var(--r-sm);
+  color: var(--red);
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  line-height: 1.5;
+  display: none;
+}
+
+.error-banner.show {
+  display: block;
+  animation: shake 0.3s;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-3px); }
+  75% { transform: translateX(3px); }
+}
+
+/* ── Status banner (infeasible / no-int-solution) ── */
+.status-banner {
+  margin-top: 10px;
+  padding: 10px 12px;
+  border-radius: var(--r-sm);
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  line-height: 1.5;
+  display: none;
+}
+
+.status-banner.show { display: block; }
+
+.status-banner.warn {
+  background: var(--amber-soft);
+  border: 1px solid rgba(245, 166, 35, 0.3);
+  color: var(--amber);
+}
+
+.status-banner.error {
+  background: var(--red-soft);
+  border: 1px solid rgba(255, 77, 109, 0.3);
+  color: var(--red);
+}
+
+/* ── Buttons ── */
+.btn-row {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+  flex-wrap: wrap;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: none;
+  border-radius: var(--r-xs);
+  padding: 9px 16px;
+  font-family: var(--font-ui);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.btn::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(255,255,255,0);
+  transition: background 0.2s;
+}
+
+.btn:hover::after { background: rgba(255,255,255,0.07); }
+
+.btn:active { transform: translateY(1px); }
+
+.btn-primary {
+  background: linear-gradient(135deg, #f5a623 0%, #e8920d 100%);
+  color: #05080f;
+  box-shadow: 0 2px 12px rgba(245, 166, 35, 0.3);
+}
+
+.btn-primary:hover {
+  box-shadow: 0 4px 20px rgba(245, 166, 35, 0.45);
+}
+
+.btn-secondary {
+  background: rgba(255,255,255,0.06);
+  color: var(--text2);
+  border: 1px solid var(--border2);
+}
+
+.btn-secondary:hover {
+  background: rgba(255,255,255,0.1);
+  color: var(--text);
+}
+
+.btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* ── Toggle checkboxes ── */
+.toggle-group {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.toggle-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  color: var(--text2);
+  font-size: 12.5px;
+  font-weight: 500;
+  transition: color 0.2s;
+  user-select: none;
+}
+
+.toggle-item:hover { color: var(--text); }
+
+.toggle-item input[type="checkbox"] { display: none; }
+
+.toggle-knob {
+  width: 34px;
+  height: 18px;
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 100px;
+  position: relative;
+  flex-shrink: 0;
+  transition: background 0.25s, border-color 0.25s;
+}
+
+.toggle-knob::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--text3);
+  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), background 0.25s;
+}
+
+.toggle-item input:checked ~ .toggle-knob {
+  background: var(--amber-soft);
+  border-color: rgba(245, 166, 35, 0.4);
+}
+
+.toggle-item input:checked ~ .toggle-knob::after {
+  transform: translateX(16px);
+  background: var(--amber);
+}
+
+/* ── Stat grid ── */
+.stats-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.stat-card {
+  background: rgba(0,0,0,0.25);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  padding: 12px 14px;
+  transition: border-color 0.2s;
+}
+
+.stat-card:hover { border-color: var(--border2); }
+
+.stat-label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text3);
+  margin-bottom: 6px;
+}
+
+.stat-value {
+  font-family: var(--font-mono);
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text);
+  letter-spacing: -0.02em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.stat-card.highlight-amber .stat-value { color: var(--amber); }
+.stat-card.highlight-cyan .stat-value { color: var(--cyan); }
+
+/* ── Node info ── */
+.node-info-box {
+  background: rgba(0,0,0,0.25);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  padding: 14px;
+}
+
+.node-desc {
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  color: var(--text2);
+  line-height: 1.55;
+  margin-bottom: 10px;
+}
+
+.tags-wrap {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.tag {
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 500;
+  padding: 3px 8px;
+  border-radius: 100px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.1);
+  color: var(--text2);
+  letter-spacing: 0.02em;
+}
+
+.tag.status-ramificacao { background: var(--cyan-soft); border-color: rgba(0,212,255,0.2); color: var(--cyan); }
+.tag.status-inteira { background: var(--green-soft); border-color: rgba(0,229,160,0.2); color: var(--green); }
+.tag.status-bound { background: var(--amber-soft); border-color: rgba(245,166,35,0.2); color: var(--amber); }
+.tag.status-inviavel { background: var(--red-soft); border-color: rgba(255,77,109,0.2); color: var(--red); }
+
+.constraint-list {
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  color: var(--text2);
+  line-height: 1.7;
+  background: rgba(0,0,0,0.25);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  padding: 14px;
+}
+
+.constraint-list .crow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 3px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.03);
+}
+
+.constraint-list .crow:last-child { border-bottom: none; }
+
+.constraint-list .cswatch {
+  width: 14px;
+  height: 3px;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+.constraint-list .cnum {
+  color: var(--text3);
+  min-width: 22px;
+  font-size: 10px;
+}
+
+/* ── Main area ── */
+.main {
+  display: grid;
+  grid-template-rows: auto 1fr auto auto;
+  gap: 12px;
+}
+
+/* ── Toolbar ── */
+.toolbar {
+  padding: 14px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.toolbar-title {
+  font-family: var(--font-ui);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text);
+  letter-spacing: 0.02em;
+  margin-bottom: 3px;
+}
+
+.toolbar-hint {
+  font-size: 11px;
+  color: var(--text3);
+  line-height: 1.5;
+}
+
+.toolbar-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+/* ── Speed select ── */
+.speed-select {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  padding: 6px 10px;
+  border-radius: var(--r-xs);
+  background: rgba(255,255,255,0.06);
+  border: 1px solid var(--border2);
+  color: var(--text2);
+  cursor: pointer;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.speed-select:hover { border-color: rgba(255,255,255,0.2); color: var(--text); }
+.speed-select:focus { border-color: rgba(245,166,35,0.4); }
+
+/* ── Node pill ── */
+.node-pill {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  padding: 5px 12px;
+  border-radius: 100px;
+  background: rgba(245, 166, 35, 0.1);
+  border: 1px solid rgba(245, 166, 35, 0.25);
+  color: var(--amber);
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+
+/* ── Range slider ── */
+input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 4px;
+  background: rgba(255,255,255,0.08);
+  border-radius: 100px;
+  outline: none;
+  min-width: 120px;
+  cursor: pointer;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #f5a623, #e8920d);
+  box-shadow: 0 0 8px rgba(245, 166, 35, 0.4);
+  cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+
+input[type="range"]::-webkit-slider-thumb:hover {
+  transform: scale(1.2);
+  box-shadow: 0 0 14px rgba(245, 166, 35, 0.6);
+}
+
+input[type="range"]::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: none;
+  background: linear-gradient(135deg, #f5a623, #e8920d);
+  cursor: pointer;
+}
+
+/* ── Plot card ── */
+.plot-card {
+  padding: 14px;
+  overflow: hidden;
+}
+
+.plot-shell {
+  display: grid;
+  grid-template-rows: minmax(560px, 1fr) auto;
+  gap: 14px;
+  align-items: stretch;
+}
+
+.plot-stage {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-height: 560px;
+  background: rgba(0,0,0,0.22);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  overflow: hidden;
+}
+
+.plot-card svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  min-height: 560px;
+  cursor: crosshair;
+  touch-action: manipulation;
+}
+
+.plot-bottompanel {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-auto-rows: auto;
+  gap: 12px;
+  min-width: 0;
+}
+
+.plot-bottompanel .legend {
+  width: 100%;
+  margin: 0;
+}
+
+/* ── Plot controls ── */
+.plot-overlay {
+  position: absolute;
+  top: 14px;
+  left: 14px;
+  display: flex;
+  gap: 6px;
+  z-index: 2;
+}
+
+.axis-panel {
+  min-width: 0;
+}
+
+.axis-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(86px, 1fr));
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.axis-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.axis-field label {
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text3);
+}
+
+.axis-input {
+  width: 100%;
+  min-width: 0;
+  background: rgba(255,255,255,0.06);
+  color: var(--text);
+  border: 1px solid var(--border2);
+  border-radius: var(--r-xs);
+  padding: 7px 8px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  outline: none;
+}
+
+.axis-input:focus {
+  border-color: rgba(245,166,35,0.35);
+  box-shadow: 0 0 0 3px rgba(245,166,35,0.06);
+}
+
+.axis-actions {
+  display: flex;
+  gap: 6px;
+  margin-top: 10px;
+  flex-wrap: wrap;
+}
+
+.plot-readout {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  line-height: 1.65;
+  color: var(--text2);
+  white-space: pre-wrap;
+}
+
+#svgPlot .inspectable {
+  cursor: pointer;
+}
+
+#svgPlot .plot-hover-crosshair {
+  pointer-events: none;
+}
+
+.plot-icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 28px;
+  padding: 0 10px;
+  border-radius: var(--r-xs);
+  background: rgba(5, 8, 15, 0.8);
+  border: 1px solid var(--border2);
+  color: var(--text2);
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  backdrop-filter: blur(10px);
+  transition: all 0.18s;
+}
+
+.plot-icon-btn:hover {
+  background: rgba(5, 8, 15, 0.95);
+  border-color: rgba(245,166,35,0.3);
+  color: var(--text);
+}
+
+/* ── Legend ── */
+.legend {
+  background: rgba(5, 8, 15, 0.88);
+  border: 1px solid var(--border2);
+  border-radius: var(--r-sm);
+  padding: 12px 14px;
+  backdrop-filter: blur(20px);
+  box-shadow: 0 4px 24px rgba(0,0,0,0.5);
+}
+
+.legend-title {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  color: var(--text3);
+  margin-bottom: 10px;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 11px;
+  color: var(--text2);
+  margin: 7px 0;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.legend-swatch {
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+  flex-shrink: 0;
+}
+
+/* ── Tree section ── */
+.tree-section {
+  padding: 16px 20px;
+}
+
+.tree-header {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+
+.tree-title {
+  font-family: var(--font-ui);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text);
+  letter-spacing: 0.02em;
+}
+
+.tree-hint {
+  font-size: 11px;
+  color: var(--text3);
+}
+
+.tree-scroll {
+  width: 100%;
+  border-radius: var(--r-sm);
+  background: rgba(0,0,0,0.2);
+  overflow-x: auto;
+  overflow-y: hidden;
+  max-height: 280px;
+}
+
+.tree-scroll::-webkit-scrollbar { height: 6px; }
+.tree-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 100px; }
+
+.tree-svg {
+  display: block;
+  height: 240px;
+}
+
+/* ── Trace + Log section ── */
+.trace-log-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+@media (max-width: 1100px) {
+  .trace-log-grid { grid-template-columns: 1fr; }
+}
+
+.trace-section, .log-section {
+  padding: 16px 20px;
+}
+
+.section-head {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.section-head .title {
+  font-family: var(--font-ui);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text);
+  letter-spacing: 0.02em;
+}
+
+.section-head .hint {
+  font-size: 11px;
+  color: var(--text3);
+}
+
+.trace-box {
+  background: rgba(0,0,0,0.3);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  padding: 14px;
+  height: 200px;
+  overflow: auto;
+  white-space: pre-wrap;
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  line-height: 1.65;
+  color: var(--text2);
+}
+
+.log-box {
+  background: rgba(0,0,0,0.3);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  padding: 6px;
+  height: 200px;
+  overflow: auto;
+}
+
+.log-row {
+  display: grid;
+  grid-template-columns: 28px 1fr auto;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 10px;
+  border-radius: var(--r-xs);
+  cursor: pointer;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text2);
+  transition: background 0.15s;
+  border: 1px solid transparent;
+}
+
+.log-row:hover { background: rgba(255,255,255,0.04); color: var(--text); }
+.log-row.active {
+  background: rgba(245,166,35,0.08);
+  border-color: rgba(245,166,35,0.25);
+  color: var(--text);
+}
+
+.log-row .lid {
+  color: var(--amber);
+  font-weight: 600;
+  text-align: center;
+}
+
+.log-row .ldetail {
+  color: var(--text3);
+  font-size: 10.5px;
+  white-space: nowrap;
+}
+
+.log-row .lstatus {
+  font-size: 10px;
+  padding: 2px 7px;
+  border-radius: 100px;
+  border: 1px solid;
+  background: rgba(255,255,255,0.04);
+  white-space: nowrap;
+}
+
+.log-row .lstatus.s-ramificacao { color: var(--cyan); border-color: rgba(0,212,255,0.3); background: var(--cyan-soft); }
+.log-row .lstatus.s-inteira { color: var(--green); border-color: rgba(0,229,160,0.3); background: var(--green-soft); }
+.log-row .lstatus.s-bound { color: var(--amber); border-color: rgba(245,166,35,0.3); background: var(--amber-soft); }
+.log-row .lstatus.s-inviavel { color: var(--red); border-color: rgba(255,77,109,0.3); background: var(--red-soft); }
+
+.trace-box::-webkit-scrollbar,
+.log-box::-webkit-scrollbar { width: 4px; height: 4px; }
+.trace-box::-webkit-scrollbar-track,
+.log-box::-webkit-scrollbar-track { background: transparent; }
+.trace-box::-webkit-scrollbar-thumb,
+.log-box::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 100px; }
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 100px; }
+
+/* ── Play button ── */
+.btn-play {
+  background: rgba(0, 212, 255, 0.1);
+  border: 1px solid rgba(0, 212, 255, 0.25);
+  color: var(--cyan);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  min-width: 80px;
+}
+
+.btn-play:hover {
+  background: rgba(0, 212, 255, 0.18);
+  color: #fff;
+}
+
+/* ── Status indicator dot ── */
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+.dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--green);
+  margin-right: 4px;
+  animation: pulse 2s infinite;
+}
+
+/* ── Sidebar scrollable content ── */
+.sidebar > .card {
+  overflow-y: auto;
+}
+
+.sidebar > .card::-webkit-scrollbar { width: 3px; }
+.sidebar > .card::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.07); }
+
+/* ── Keyboard hint ── */
+.kbd {
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  padding: 1px 5px;
+  border-radius: 3px;
+  background: rgba(255,255,255,0.07);
+  border: 1px solid rgba(255,255,255,0.12);
+  color: var(--text2);
+  margin: 0 2px;
+}
+
+/* ── Responsive ── */
+@media (max-width: 1100px) {
+  .plot-bottompanel {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 900px) {
+  .app {
+    grid-template-columns: 1fr;
+  }
+  .plot-card {
+    padding: 12px;
+  }
+  .plot-stage,
+  .plot-card svg {
+    min-height: 420px;
+  }
+}
+</style>
+</head>
+<body>
+
+<div class="app">
+  <!-- ════════ SIDEBAR ════════ -->
+  <aside class="sidebar">
+    <div class="card" style="flex:1; overflow:auto;">
+      <!-- Header -->
+      <div class="sidebar-head">
+        <div class="eyebrow">Programação Linear Inteira</div>
+        <h1>PLI <em>2D</em><br>Interativo</h1>
+        <p>Visualizador com semiplanos, árvore Branch &amp; Bound, animação passo a passo e exportação. Suporta <strong>max</strong> e <strong>min</strong>, declaração de variáveis inteiras/contínuas e zoom no gráfico.</p>
+      </div>
+
+      <!-- Model input -->
+      <div class="section">
+        <div class="section-label">Modelo</div>
+        <textarea class="code-input" id="modelInput" spellcheck="false">max = 17x1 + 12x2
+s.a
+10x1 + 7x2 <= 40
+1x1 + 1x2 <= 5
+x1; x2 ∈ I</textarea>
+        <div class="error-banner" id="errorBanner"></div>
+        <div class="status-banner" id="statusBanner"></div>
+        <div class="btn-row">
+          <button class="btn btn-primary" id="runBtn">↻ Atualizar</button>
+          <button class="btn btn-secondary" id="demoBtn">Exemplo</button>
+          <button class="btn btn-secondary" id="exportPngBtn">⬇ PNG</button>
+          <button class="btn btn-secondary" id="exportSvgBtn">⬇ SVG</button>
+        </div>
+      </div>
+
+      <!-- Layer toggles -->
+      <div class="section">
+        <div class="section-label">Camadas</div>
+        <div class="toggle-group">
+          <label class="toggle-item">
+            <input type="checkbox" id="showHalfspaces" checked>
+            <span class="toggle-knob"></span>
+            Semiplanos das restrições
+          </label>
+          <label class="toggle-item">
+            <input type="checkbox" id="showIntegers" checked>
+            <span class="toggle-knob"></span>
+            Pontos inteiros viáveis
+          </label>
+          <label class="toggle-item">
+            <input type="checkbox" id="showNodeRegion" checked>
+            <span class="toggle-knob"></span>
+            Região do nó atual
+          </label>
+          <label class="toggle-item">
+            <input type="checkbox" id="showVertices" checked>
+            <span class="toggle-knob"></span>
+            Vértices
+          </label>
+          <label class="toggle-item">
+            <input type="checkbox" id="showLineLabels" checked>
+            <span class="toggle-knob"></span>
+            Rótulos das restrições (C1, C2…)
+          </label>
+        </div>
+      </div>
+
+      <!-- Stats -->
+      <div class="section">
+        <div class="section-label">Resultados</div>
+        <div class="stats-grid">
+          <div class="stat-card highlight-amber">
+            <div class="stat-label">Ótimo inteiro</div>
+            <div class="stat-value" id="bestZ">—</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Solução inteira</div>
+            <div class="stat-value" style="font-size:13px;margin-top:4px" id="bestX">—</div>
+          </div>
+          <div class="stat-card highlight-cyan">
+            <div class="stat-label">LP relaxado</div>
+            <div class="stat-value" style="font-size:13px;margin-top:4px" id="lpX">—</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Valor LP</div>
+            <div class="stat-value" id="lpZ">—</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Nós explorados</div>
+            <div class="stat-value" id="nodeCount">—</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Gap</div>
+            <div class="stat-value" id="gapVal">—</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Node info -->
+      <div class="section">
+        <div class="section-label">Nó atual</div>
+        <div class="node-info-box">
+          <div class="node-desc" id="nodeDesc">—</div>
+          <div class="tags-wrap" id="nodeTags"></div>
+        </div>
+      </div>
+
+      <!-- Constraints -->
+      <div class="section">
+        <div class="section-label">Restrições</div>
+        <div class="constraint-list" id="constraintList">—</div>
+      </div>
+
+      <!-- Keyboard shortcuts -->
+      <div class="section">
+        <div class="section-label">Atalhos</div>
+        <div style="font-size:11.5px; color:var(--text2); line-height:2;">
+          <span class="kbd">←</span><span class="kbd">→</span> navegar nós<br>
+          <span class="kbd">Espaço</span> play/pause<br>
+          <span class="kbd">Home</span> primeiro nó · <span class="kbd">End</span> último<br>
+          <span class="kbd">R</span> resetar zoom · <span class="kbd">Enter</span> atualizar (no modelo)
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ════════ MAIN ════════ -->
+  <section class="main">
+    <!-- Toolbar -->
+    <div class="card toolbar">
+      <div class="toolbar-left">
+        <div class="toolbar-title">
+          <span class="dot"></span>Plano 2D
+        </div>
+        <div class="toolbar-hint">Ajuste a janela pelos campos de escala dos eixos e pelos botões de zoom · clique nos nós da árvore para sincronizar.</div>
+      </div>
+      <div class="toolbar-controls">
+        <button class="btn btn-secondary" id="prevBtn" style="padding:8px 12px" title="Anterior (←)">‹ Anterior</button>
+        <button class="btn btn-play" id="playBtn" title="Play/Pause (Espaço)">▶ Play</button>
+        <select class="speed-select" id="speedSelect" title="Velocidade da animação">
+          <option value="2200">0.5×</option>
+          <option value="1100" selected>1×</option>
+          <option value="600">2×</option>
+          <option value="300">4×</option>
+        </select>
+        <input type="range" id="nodeSlider" min="0" max="0" value="0">
+        <button class="btn btn-secondary" id="nextBtn" style="padding:8px 12px" title="Próximo (→)">Próximo ›</button>
+        <span class="node-pill" id="nodeIndexPill">Nó 0 / 0</span>
+      </div>
+    </div>
+
+    <!-- Plot -->
+    <div class="card plot-card">
+      <div class="plot-shell">
+        <div class="plot-stage">
+          <svg id="svgPlot" viewBox="0 0 1080 720" preserveAspectRatio="xMidYMid meet"></svg>
+        </div>
+        <div class="plot-bottompanel">
+          <!-- Linha 1, coluna 1: Legenda -->
+          <div class="legend">
+            <div class="legend-title">Legenda</div>
+            <div class="legend-item">
+              <span class="legend-swatch" style="background:rgba(0,229,160,0.25); border:1px solid rgba(0,229,160,0.5)"></span>
+              Região factível global
+            </div>
+            <div class="legend-item">
+              <span class="legend-swatch" style="background:rgba(0,212,255,0.2); border:1px solid rgba(0,212,255,0.4)"></span>
+              Região do nó atual
+            </div>
+            <div class="legend-item">
+              <span class="legend-swatch" style="background:#ffd166; border:1px solid #ffd166"></span>
+              Solução LP
+            </div>
+            <div class="legend-item">
+              <span class="legend-swatch" style="background:#ff4d6d; border:1px solid #ff4d6d"></span>
+              Ótimo inteiro
+            </div>
+            <div class="legend-item">
+              <span class="legend-swatch" style="background:#a78bfa; border:1px solid #a78bfa"></span>
+              Ponto inteiro viável
+            </div>
+          </div>
+          <!-- Linha 1, coluna 2: Escala dos eixos -->
+          <div class="legend axis-panel">
+            <div class="legend-title">Escala dos eixos</div>
+            <div class="axis-grid">
+              <div class="axis-field">
+                <label for="xMinInput">x₁ mín.</label>
+                <input class="axis-input" id="xMinInput" type="number" step="any" placeholder="auto">
+              </div>
+              <div class="axis-field">
+                <label for="xMaxInput">x₁ máx.</label>
+                <input class="axis-input" id="xMaxInput" type="number" step="any" placeholder="auto">
+              </div>
+              <div class="axis-field">
+                <label for="yMinInput">x₂ mín.</label>
+                <input class="axis-input" id="yMinInput" type="number" step="any" placeholder="auto">
+              </div>
+              <div class="axis-field">
+                <label for="yMaxInput">x₂ máx.</label>
+                <input class="axis-input" id="yMaxInput" type="number" step="any" placeholder="auto">
+              </div>
+            </div>
+            <div class="axis-actions">
+              <button class="plot-icon-btn" id="applyAxesBtn" title="Aplicar limites manuais">Aplicar</button>
+              <button class="plot-icon-btn" id="autoAxesBtn" title="Voltar ao ajuste automático">Auto</button>
+            </div>
+          </div>
+          <!-- Linha 2, coluna 1: Navegação -->
+          <div class="legend">
+            <div class="legend-title">Navegação</div>
+            <div class="axis-actions" style="margin-top:0">
+              <button class="plot-icon-btn" id="resetZoomBtn" title="Resetar zoom (R)">⟲ Reset</button>
+              <button class="plot-icon-btn" id="zoomInBtn" title="Aproximar os dados">＋ Zoom</button>
+              <button class="plot-icon-btn" id="zoomOutBtn" title="Afastar os dados">− Zoom</button>
+            </div>
+            <div class="plot-readout" style="margin-top:10px">Use os botões acima para ajustar o zoom. Os limites de x₁ e x₂ podem ser definidos manualmente em <strong>Escala dos eixos</strong>.</div>
+          </div>
+          <!-- Linha 2, coluna 2: Inspeção -->
+          <div class="legend">
+            <div class="legend-title">Inspeção</div>
+            <div class="plot-readout" id="plotReadout">Clique em qualquer região, reta, vértice ou ponto para inspecionar valores.
+Também é possível clicar no fundo para ler coordenadas e valor da função objetivo.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tree -->
+    <div class="card tree-section">
+      <div class="tree-header">
+        <div class="tree-title">Árvore Branch &amp; Bound</div>
+        <div class="tree-hint">Clique em um nó para sincronizar com o gráfico. Role horizontalmente em árvores grandes.</div>
+      </div>
+      <div class="tree-scroll" id="treeScroll">
+        <svg id="treeSvg" class="tree-svg" preserveAspectRatio="xMinYMid meet"></svg>
+      </div>
+    </div>
+
+    <!-- Trace + Log -->
+    <div class="trace-log-grid">
+      <div class="card trace-section">
+        <div class="section-head">
+          <div class="title">Traço do nó</div>
+          <div class="hint">Detalhe do nó selecionado.</div>
+        </div>
+        <div class="trace-box" id="traceBox">—</div>
+      </div>
+      <div class="card log-section">
+        <div class="section-head">
+          <div class="title">Histórico</div>
+          <div class="hint">Todos os nós explorados.</div>
+        </div>
+        <div class="log-box" id="logBox"></div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<script>
+"use strict";
+
+/* ═══════════════════════════════════════════════════════════
+   CONSTANTS
+   ═══════════════════════════════════════════════════════════ */
+const EPS = 1e-9;
+const DEDUP_EPS = 1e-7;
+const COLORS = ["#00d4ff","#f5a623","#00e5a0","#ff4d6d","#a78bfa","#ffd166"];
+const STATUS = {
+  BRANCH: "ramificação",
+  INT: "solução inteira",
+  BOUND: "corte por bound",
+  INFEAS: "corte por inviabilidade (LP)"
+};
+const STATUS_KEYS = {
+  [STATUS.BRANCH]: "ramificacao",
+  [STATUS.INT]: "inteira",
+  [STATUS.BOUND]: "bound",
+  [STATUS.INFEAS]: "inviavel"
+};
+
+/* ═══════════════════════════════════════════════════════════
+   STATE
+   ═══════════════════════════════════════════════════════════ */
+let currentModel = null, currentRun = null, currentNode = 0;
+let playTimer = null, playInterval = 1100;
+const integerPointsCache = new Map();
+
+// Plot viewport / scale state
+const PLOT_BASE_VB = { x: 0, y: 0, w: 1080, h: 720 };
+let axisDomainOverride = { xmin: null, xmax: null, ymin: null, ymax: null };
+let plotViewDomain = null;
+let lastAutoPlotDomain = null;
+let currentPlotGeometry = null;
+let plotSelection = null;
+let suppressPlotClick = false;
+
+/* ═══════════════════════════════════════════════════════════
+   PARSER
+   ═══════════════════════════════════════════════════════════ */
+function normalizeModel(s){
+  return s.normalize("NFKC")
+    .replaceAll("≤","<=").replaceAll("≥",">=")
+    .replaceAll("−","-").replaceAll("–","-").replaceAll("—","-")
+    .replaceAll("〖"," ").replaceAll("〗"," ");
+}
+
+/**
+ * Parses a linear expression like "17x1 + 12x2 - 3" into
+ * { coeffs: {1: c1, 2: c2}, constant }. Supports scientific notation.
+ * Throws on unrecognized tokens.
+ */
+function parseLinearExpr(expr){
+  // Strip whitespace and explicit multiplication sign
+  let s = expr.replace(/\s+/g, '').replace(/\*/g, '');
+  if(!s) return { coeffs: {1:0, 2:0}, constant: 0 };
+  // Ensure leading sign
+  if(s[0] !== '+' && s[0] !== '-') s = '+' + s;
+
+  const coeffs = {1:0, 2:0};
+  let constant = 0;
+  let pos = 0;
+  // Number with optional decimal & scientific exponent
+  const numRe = /^(\d+\.?\d*|\.\d+)(?:[eE][+\-]?\d+)?/;
+  const varRe = /^x_?([0-9]+)/;
+
+  while(pos < s.length){
+    const ch = s[pos];
+    if(ch !== '+' && ch !== '-'){
+      throw new Error(`Esperado '+' ou '-' na posição ${pos} de "${expr}".`);
+    }
+    const sign = ch === '-' ? -1 : 1;
+    pos++;
+
+    const numMatch = numRe.exec(s.slice(pos));
+    let coeff;
+    if(numMatch){
+      coeff = parseFloat(numMatch[0]) * sign;
+      pos += numMatch[0].length;
+    } else {
+      coeff = sign;
+    }
+
+    const varMatch = varRe.exec(s.slice(pos));
+    if(varMatch){
+      const idx = Number(varMatch[1]);
+      if(idx !== 1 && idx !== 2){
+        throw new Error(`Variável x${idx} não suportada (apenas x1 e x2).`);
+      }
+      coeffs[idx] += coeff;
+      pos += varMatch[0].length;
+    } else if(numMatch){
+      constant += coeff;
+    } else {
+      throw new Error(`Termo inválido perto de "${s.slice(pos, pos+10)}…" em "${expr}".`);
+    }
+  }
+  return { coeffs, constant };
+}
+
+/**
+ * Extracts integer/continuous declarations from a string.
+ * Recognizes patterns like "x1; x2 ∈ I", "x1 ∈ R, x2 ∈ I", "x1 ∈ Z".
+ * Returns { isInt: {1: bool, 2: bool}, cleaned: stringWithoutDecls }.
+ * Default: integer for both (since this is an ILP tool).
+ */
+function parseIntegerDecls(s){
+  const isInt = {1: true, 2: true}; // default
+  const seen = new Set();
+  const declRegex = /(x_?[12](?:\s*[,;]\s*x_?[12])*)\s*∈\s*([IRZ])/gi;
+  let cleaned = s;
+  for(const m of [...s.matchAll(declRegex)]){
+    const vars = m[1].match(/x_?([12])/gi).map(v => Number(v.replace(/\D/g, '')));
+    const type = m[2].toUpperCase();
+    vars.forEach(v => {
+      seen.add(v);
+      isInt[v] = (type === 'I' || type === 'Z');
+    });
+  }
+  cleaned = cleaned.replace(declRegex, '');
+  return { isInt, cleaned, declared: seen };
+}
+
+function parseModel(modelStr){
+  const s = normalizeModel(modelStr).replace(/\r/g,"").replace(/\n/g," ").replace(/\s+/g," ").trim();
+  if(!s) throw new Error("Modelo vazio.");
+
+  const m = s.match(/(max|min)\s*=?\s*(.*?)\s+(?:st|s\.?t\.?|s\.?a\.?|subject\s+to|sujeito\s+a|tal\s+que)\s+(.*)/i);
+  if(!m) throw new Error("Não consegui ler o modelo. Use o formato: \"max = … s.a …\".");
+
+  const sense = m[1].toLowerCase();
+  const objExpr = m[2].trim();
+  let consPart = m[3].trim();
+
+  if(!objExpr) throw new Error("Função objetivo vazia.");
+
+  // Parse objective
+  let obj;
+  try {
+    obj = parseLinearExpr(objExpr).coeffs;
+  } catch(e){
+    throw new Error(`Erro na função objetivo: ${e.message}`);
+  }
+
+  // Extract integer declarations from constraints part
+  const declRes = parseIntegerDecls(consPart);
+  consPart = declRes.cleaned;
+  const isInt = declRes.isInt;
+
+  // Parse constraints
+  const cons = [];
+  const displayCons = [];
+  const consRegex = /([^<>!=]+?)\s*(<=|>=|=|<|>)\s*(-?\d+\.?\d*(?:[eE][+\-]?\d+)?)/g;
+  let cmatch;
+  let consIdx = 0;
+  while((cmatch = consRegex.exec(consPart)) !== null){
+    const lhs = cmatch[1].trim();
+    const op = cmatch[2];
+    const rhs0 = parseFloat(cmatch[3]);
+    if(!lhs) continue;
+    let parsed;
+    try {
+      parsed = parseLinearExpr(lhs);
+    } catch(e){
+      throw new Error(`Erro na restrição ${consIdx+1}: ${e.message}`);
+    }
+    const { coeffs, constant } = parsed;
+    if(coeffs[1] === 0 && coeffs[2] === 0){
+      throw new Error(`Restrição ${consIdx+1} sem variáveis: "${lhs} ${op} ${rhs0}".`);
+    }
+    const rhs = rhs0 - constant;
+    const display = `${formatLinearExpr(coeffs)} ${op} ${fmt(rhs)}`;
+    const color = COLORS[consIdx % COLORS.length];
+    consIdx++;
+
+    displayCons.push(display);
+    if(op === "<="){
+      cons.push({a:coeffs[1], b:coeffs[2], c:rhs, raw:display, color});
+    } else if(op === "<"){
+      cons.push({a:coeffs[1], b:coeffs[2], c:rhs-EPS, raw:display, color});
+    } else if(op === ">="){
+      cons.push({a:-coeffs[1], b:-coeffs[2], c:-rhs, raw:display, color});
+    } else if(op === ">"){
+      cons.push({a:-coeffs[1], b:-coeffs[2], c:-(rhs+EPS), raw:display, color});
+    } else { // "="
+      cons.push({a:coeffs[1], b:coeffs[2], c:rhs, raw:display, color});
+      cons.push({a:-coeffs[1], b:-coeffs[2], c:-rhs, raw:display, color});
+    }
+  }
+
+  if(cons.length === 0){
+    throw new Error("Nenhuma restrição reconhecida. Use formato \"a x1 + b x2 <= c\".");
+  }
+
+  // Final check: any leftover non-empty content?
+  const leftover = consPart.replace(consRegex, '').replace(/[,;\s]/g, '');
+  if(leftover){
+    // Only warn — don't fail. Most likely it's a stray declaration we already handled.
+    console.warn("Conteúdo não reconhecido nas restrições:", leftover);
+  }
+
+  return { sense, obj, cons, displayCons, isInt };
+}
+
+/* ═══════════════════════════════════════════════════════════
+   FORMATTING
+   ═══════════════════════════════════════════════════════════ */
+function fmt(n){
+  if(n == null || !Number.isFinite(n)) return "—";
+  const r = Math.round(n * 1000) / 1000;
+  return Number.isInteger(r) ? String(r) : r.toFixed(3).replace(/\.?0+$/,"");
+}
+
+function formatLinearExpr(coeffs){
+  const parts = [];
+  for(const k of [1, 2]){
+    const c = coeffs[k];
+    if(c === 0) continue;
+    const absC = Math.abs(c);
+    const isFirst = parts.length === 0;
+    let term;
+    if(isFirst){
+      term = (c < 0 ? '-' : '') + (absC === 1 ? '' : fmt(absC)) + `x${k}`;
+    } else {
+      term = (c < 0 ? ' - ' : ' + ') + (absC === 1 ? '' : fmt(absC)) + `x${k}`;
+    }
+    parts.push(term);
+  }
+  return parts.length ? parts.join('') : '0';
+}
+
+/* ═══════════════════════════════════════════════════════════
+   GEOMETRY / LP
+   ═══════════════════════════════════════════════════════════ */
+function solve2(h1, h2){
+  const det = h1.a*h2.b - h2.a*h1.b;
+  if(Math.abs(det) < 1e-12) return null;
+  return { x: (h1.c*h2.b - h2.c*h1.b)/det, y: (h1.a*h2.c - h2.a*h1.c)/det };
+}
+
+function feasible(pt, hs){
+  return hs.every(h => h.a*pt.x + h.b*pt.y <= h.c + EPS);
+}
+
+function objective(pt, obj){ return obj[1]*pt.x + obj[2]*pt.y; }
+
+function isInt(v){ return Math.abs(v - Math.round(v)) < EPS; }
+
+function inferExplicitVarBounds(baseCons){
+  const info = {
+    x1: { hasLower: false, hasUpper: false },
+    x2: { hasLower: false, hasUpper: false }
+  };
+  for(const h of baseCons){
+    if(Math.abs(h.b) < EPS && Math.abs(h.a) > EPS){
+      if(h.a > 0) info.x1.hasUpper = true;
+      if(h.a < 0) info.x1.hasLower = true;
+    }
+    if(Math.abs(h.a) < EPS && Math.abs(h.b) > EPS){
+      if(h.b > 0) info.x2.hasUpper = true;
+      if(h.b < 0) info.x2.hasLower = true;
+    }
+  }
+  return info;
+}
+
+function buildHalfspaces(baseCons, bounds, assumeNonneg=true){
+  const hs = baseCons.map(h => ({...h}));
+  const explicitBounds = inferExplicitVarBounds(baseCons);
+  if(assumeNonneg){
+    if(!explicitBounds.x1.hasLower) hs.push({a:-1,b:0,c:0,raw:"x1 >= 0",color:"#4a5580"});
+    if(!explicitBounds.x2.hasLower) hs.push({a:0,b:-1,c:0,raw:"x2 >= 0",color:"#4a5580"});
+  }
+  if(bounds.x1min != null) hs.push({a:-1,b:0,c:-bounds.x1min,raw:`x1 >= ${bounds.x1min}`,color:"#ffffff"});
+  if(bounds.x1max != null) hs.push({a:1,b:0,c:bounds.x1max,raw:`x1 <= ${bounds.x1max}`,color:"#ffffff"});
+  if(bounds.x2min != null) hs.push({a:0,b:-1,c:-bounds.x2min,raw:`x2 >= ${bounds.x2min}`,color:"#ffffff"});
+  if(bounds.x2max != null) hs.push({a:0,b:1,c:bounds.x2max,raw:`x2 <= ${bounds.x2max}`,color:"#ffffff"});
+  return hs;
+}
+
+function polygonFromHalfspaces(hs){
+  const pts = [];
+  for(let i=0;i<hs.length;i++){
+    for(let j=i+1;j<hs.length;j++){
+      const p = solve2(hs[i], hs[j]);
+      if(p && Number.isFinite(p.x) && Number.isFinite(p.y) && feasible(p, hs)) pts.push(p);
+    }
+  }
+  // Robust dedup with absolute tolerance
+  const uniq = [];
+  for(const p of pts){
+    if(!uniq.some(q => Math.abs(p.x-q.x) < DEDUP_EPS && Math.abs(p.y-q.y) < DEDUP_EPS)){
+      uniq.push(p);
+    }
+  }
+  if(uniq.length < 3) return uniq.length ? uniq : [];
+  // Sort by polar angle around centroid
+  const cx = uniq.reduce((s,p)=>s+p.x,0)/uniq.length;
+  const cy = uniq.reduce((s,p)=>s+p.y,0)/uniq.length;
+  uniq.sort((p,q) => Math.atan2(p.y-cy, p.x-cx) - Math.atan2(q.y-cy, q.x-cx));
+  return uniq;
+}
+
+function lpRelax(model, bounds){
+  const hs = buildHalfspaces(model.cons, bounds, true);
+  const polygon = polygonFromHalfspaces(hs);
+  if(polygon.length < 1) return null;
+  const isMax = model.sense === "max";
+  let best = polygon[0], zbest = objective(best, model.obj);
+  for(const p of polygon){
+    const z = objective(p, model.obj);
+    if(isMax ? z > zbest + EPS : z < zbest - EPS){ best = p; zbest = z; }
+  }
+  return { point: best, value: zbest, polygon, hs };
+}
+
+/* ═══════════════════════════════════════════════════════════
+   BRANCH & BOUND (supports max & min, MIP w/ continuous vars)
+   ═══════════════════════════════════════════════════════════ */
+function runBB(model){
+  const isMax = model.sense === "max";
+  const incumbent = { point: null, value: isMax ? -Infinity : Infinity };
+  const better = (a, inc) => isMax ? a > inc + EPS : a < inc - EPS;
+  // prune if LP bound cannot improve incumbent
+  const pruneByBound = (z) => incumbent.point != null &&
+    (isMax ? z <= incumbent.value + EPS : z >= incumbent.value - EPS);
+
+  const nodes = [];
+  let nid = 0;
+
+  const rootBounds = { x1min:null, x1max:null, x2min:null, x2max:null };
+  const rootRes = lpRelax(model, rootBounds);
+  // DFS stack with prelim LP attached to avoid re-solving
+  const stack = [{
+    id: 0, parent: null, depth: 0, branch: "raiz",
+    bounds: rootBounds, prelimRes: rootRes
+  }];
+
+  while(stack.length){
+    const node = stack.pop();
+    const { prelimRes, ...rest } = node;
+    const entry = { ...rest };
+    const res = prelimRes;
+
+    if(!res){
+      entry.status = STATUS.INFEAS;
+      entry.res = null;
+      nodes.push(entry);
+      continue;
+    }
+
+    entry.res = res;
+    const { x, y } = res.point;
+    const z = res.value;
+
+    if(pruneByBound(z)){
+      entry.status = STATUS.BOUND;
+      nodes.push(entry);
+      continue;
+    }
+
+    const x1Ok = !model.isInt[1] || isInt(x);
+    const x2Ok = !model.isInt[2] || isInt(y);
+
+    if(x1Ok && x2Ok){
+      entry.status = STATUS.INT;
+      if(incumbent.point == null || better(z, incumbent.value)){
+        incumbent.point = {
+          x: model.isInt[1] ? Math.round(x) : x,
+          y: model.isInt[2] ? Math.round(y) : y
+        };
+        incumbent.value = z;
+        entry.newIncumbent = true;
+      }
+      nodes.push(entry);
+      continue;
+    }
+
+    // Decide branching variable
+    let v;
+    if(!x1Ok && !x2Ok){
+      const f1 = Math.abs(x - Math.floor(x));
+      const f2 = Math.abs(y - Math.floor(y));
+      v = (f1 >= f2) ? 1 : 2;
+    } else {
+      v = !x1Ok ? 1 : 2;
+    }
+    const vv = v === 1 ? x : y;
+    const fl = Math.floor(vv), ce = Math.ceil(vv);
+
+    entry.status = STATUS.BRANCH;
+    entry.branchOn = `x${v} ≤ ${fl}  |  x${v} ≥ ${ce}`;
+    nodes.push(entry);
+
+    const L = { ...node.bounds }, R = { ...node.bounds };
+    if(v === 1){
+      L.x1max = L.x1max == null ? fl : Math.min(L.x1max, fl);
+      R.x1min = R.x1min == null ? ce : Math.max(R.x1min, ce);
+    } else {
+      L.x2max = L.x2max == null ? fl : Math.min(L.x2max, fl);
+      R.x2min = R.x2min == null ? ce : Math.max(R.x2min, ce);
+    }
+
+    // Solve children once and store on the nodes — avoids redundant LPs later
+    const lRes = lpRelax(model, L);
+    const rRes = lpRelax(model, R);
+    nid++; const lid = nid;
+    nid++; const rid = nid;
+
+    const lNode = { id:lid, parent:node.id, depth:node.depth+1, branch:`x${v} ≤ ${fl}`, bounds:L, prelimRes:lRes };
+    const rNode = { id:rid, parent:node.id, depth:node.depth+1, branch:`x${v} ≥ ${ce}`, bounds:R, prelimRes:rRes };
+
+    // Push less promising first so more promising is popped first
+    const lz = lRes ? lRes.value : (isMax ? -Infinity : Infinity);
+    const rz = rRes ? rRes.value : (isMax ? -Infinity : Infinity);
+    const lBetter = isMax ? lz >= rz : lz <= rz;
+    if(lBetter){ stack.push(rNode); stack.push(lNode); }
+    else { stack.push(lNode); stack.push(rNode); }
+  }
+
+  return { nodes, incumbent };
+}
+
+function feasibleIntegerPoints(hs, xMin, xMax, yMin, yMax, cacheKey){
+  if(cacheKey != null && integerPointsCache.has(cacheKey)){
+    return integerPointsCache.get(cacheKey);
+  }
+  const pts = [];
+  for(let x=xMin;x<=xMax;x++){
+    for(let y=yMin;y<=yMax;y++){
+      if(feasible({x,y}, hs)) pts.push({x,y});
+    }
+  }
+  if(cacheKey != null) integerPointsCache.set(cacheKey, pts);
+  return pts;
+}
+
+function lineSegmentForHalfspace(h, xmin, xmax, ymin, ymax){
+  const cands = [];
+  if(Math.abs(h.b) > 1e-12){
+    cands.push({x:xmin, y:(h.c - h.a*xmin)/h.b});
+    cands.push({x:xmax, y:(h.c - h.a*xmax)/h.b});
+  }
+  if(Math.abs(h.a) > 1e-12){
+    cands.push({x:(h.c - h.b*ymin)/h.a, y:ymin});
+    cands.push({x:(h.c - h.b*ymax)/h.a, y:ymax});
+  }
+  const pts = [];
+  for(const p of cands){
+    if(p.x >= xmin-EPS && p.x <= xmax+EPS && p.y >= ymin-EPS && p.y <= ymax+EPS){
+      if(!pts.some(q => Math.abs(q.x-p.x) < DEDUP_EPS && Math.abs(q.y-p.y) < DEDUP_EPS)){
+        pts.push(p);
+      }
+    }
+  }
+  return pts.length < 2 ? null : [pts[0], pts[1]];
+}
+
+function clipPolygonWithHalfspace(poly, h){
+  const inside = p => h.a*p.x + h.b*p.y <= h.c + EPS;
+  const inter = (p1, p2) => {
+    const dx = p2.x - p1.x, dy = p2.y - p1.y;
+    const den = h.a*dx + h.b*dy;
+    if(Math.abs(den) < 1e-12) return null;
+    const t = (h.c - h.a*p1.x - h.b*p1.y) / den;
+    return { x: p1.x + t*dx, y: p1.y + t*dy };
+  };
+  const out = [];
+  for(let i=0;i<poly.length;i++){
+    const cur = poly[i], prev = poly[(i+poly.length-1)%poly.length];
+    const cin = inside(cur), pin = inside(prev);
+    if(cin){
+      if(!pin){ const p = inter(prev, cur); if(p) out.push(p); }
+      out.push(cur);
+    } else if(pin){
+      const p = inter(prev, cur); if(p) out.push(p);
+    }
+  }
+  return out;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   ERROR / STATUS BANNERS
+   ═══════════════════════════════════════════════════════════ */
+function showError(msg){
+  const banner = document.getElementById("errorBanner");
+  banner.textContent = msg;
+  banner.classList.add("show");
+  document.getElementById("modelInput").classList.add("has-error");
+}
+
+function clearError(){
+  document.getElementById("errorBanner").classList.remove("show");
+  document.getElementById("modelInput").classList.remove("has-error");
+}
+
+function showStatus(msg, kind="warn"){
+  const banner = document.getElementById("statusBanner");
+  banner.textContent = msg;
+  banner.className = `status-banner show ${kind}`;
+}
+
+function clearStatus(){
+  document.getElementById("statusBanner").classList.remove("show");
+}
+
+/* ═══════════════════════════════════════════════════════════
+   PLOT (with pan/zoom, constraint labels)
+   ═══════════════════════════════════════════════════════════ */
+function applyPlotViewBox(){
+  document.getElementById("svgPlot").setAttribute("viewBox",
+    `${PLOT_BASE_VB.x} ${PLOT_BASE_VB.y} ${PLOT_BASE_VB.w} ${PLOT_BASE_VB.h}`);
+}
+
+function resetPlotZoom(redraw=true){
+  plotViewDomain = null;
+  applyPlotViewBox();
+  if(redraw && currentModel && currentRun) drawPlot();
+}
+
+function escapeXml(s){
+  return String(s).replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;");
+}
+
+
+function escapeAttr(s){
+  return escapeXml(String(s)).replaceAll("'", "&#39;");
+}
+
+function niceStep(span, target=10){
+  const safeSpan = Math.max(Math.abs(span), 1e-9);
+  const raw = safeSpan / Math.max(2, target);
+  const mag = Math.pow(10, Math.floor(Math.log10(raw)));
+  const norm = raw / mag;
+  let step;
+  if(norm <= 1) step = 1;
+  else if(norm <= 2) step = 2;
+  else if(norm <= 5) step = 5;
+  else step = 10;
+  return step * mag;
+}
+
+function buildTicks(min, max, target=10){
+  const step = niceStep(max - min, target);
+  const start = Math.ceil(min / step) * step;
+  const ticks = [];
+  for(let v = start; v <= max + step * 0.5; v += step){
+    const val = Math.abs(v) < EPS ? 0 : v;
+    ticks.push(Number(val.toFixed(10)));
+  }
+  return ticks;
+}
+
+function extractAxisIntercepts(h){
+  const pts = [];
+  if(Math.abs(h.a) > 1e-12){
+    const x = h.c / h.a;
+    if(Number.isFinite(x)) pts.push({x, y:0});
+  }
+  if(Math.abs(h.b) > 1e-12){
+    const y = h.c / h.b;
+    if(Number.isFinite(y)) pts.push({x:0, y});
+  }
+  return pts;
+}
+
+function inferPlotDomain(model, node, root){
+  const pts = [{x:0, y:0}];
+  const rootPoly = root?.polygon || [];
+  const nodePoly = node?.res?.polygon || [];
+  pts.push(...rootPoly, ...nodePoly);
+  if(root?.point) pts.push(root.point);
+  if(node?.res?.point) pts.push(node.res.point);
+  if(currentRun?.incumbent?.point) pts.push(currentRun.incumbent.point);
+
+  const boundLines = [];
+  const b = node?.bounds || {};
+  if(b.x1min != null) boundLines.push({a:-1,b:0,c:-b.x1min,raw:`x1 >= ${b.x1min}`});
+  if(b.x1max != null) boundLines.push({a:1,b:0,c:b.x1max,raw:`x1 <= ${b.x1max}`});
+  if(b.x2min != null) boundLines.push({a:0,b:-1,c:-b.x2min,raw:`x2 >= ${b.x2min}`});
+  if(b.x2max != null) boundLines.push({a:0,b:1,c:b.x2max,raw:`x2 <= ${b.x2max}`});
+
+  const allLines = [...model.cons, ...boundLines];
+  allLines.forEach(h => pts.push(...extractAxisIntercepts(h)));
+  for(let i=0;i<allLines.length;i++){
+    for(let j=i+1;j<allLines.length;j++){
+      const p = solve2(allLines[i], allLines[j]);
+      if(p && Number.isFinite(p.x) && Number.isFinite(p.y) && Math.abs(p.x) <= 1e5 && Math.abs(p.y) <= 1e5){
+        pts.push(p);
+      }
+    }
+  }
+
+  const finite = pts.filter(p => Number.isFinite(p.x) && Number.isFinite(p.y) && Math.abs(p.x) <= 1e5 && Math.abs(p.y) <= 1e5);
+  let xmin = -1, xmax = 8, ymin = -1, ymax = 8;
+  if(finite.length){
+    xmin = Math.min(...finite.map(p => p.x));
+    xmax = Math.max(...finite.map(p => p.x));
+    ymin = Math.min(...finite.map(p => p.y));
+    ymax = Math.max(...finite.map(p => p.y));
+  }
+
+  if(Math.abs(xmax - xmin) < 1e-9){ xmin -= 1; xmax += 1; }
+  if(Math.abs(ymax - ymin) < 1e-9){ ymin -= 1; ymax += 1; }
+
+  const xPad = Math.max(1, Math.abs(xmax - xmin) * 0.14);
+  const yPad = Math.max(1, Math.abs(ymax - ymin) * 0.14);
+  xmin -= xPad; xmax += xPad; ymin -= yPad; ymax += yPad;
+
+  if(xmax - xmin < 6){
+    const extra = (6 - (xmax - xmin)) / 2;
+    xmin -= extra; xmax += extra;
+  }
+  if(ymax - ymin < 6){
+    const extra = (6 - (ymax - ymin)) / 2;
+    ymin -= extra; ymax += extra;
+  }
+
+  xmin = Math.max(-1e4, xmin);
+  xmax = Math.min(1e4, xmax);
+  ymin = Math.max(-1e4, ymin);
+  ymax = Math.min(1e4, ymax);
+
+  return { xmin, xmax, ymin, ymax };
+}
+
+function getBasePlotDomain(autoDomain){
+  const d = { ...autoDomain };
+  if(axisDomainOverride.xmin != null) d.xmin = axisDomainOverride.xmin;
+  if(axisDomainOverride.xmax != null) d.xmax = axisDomainOverride.xmax;
+  if(axisDomainOverride.ymin != null) d.ymin = axisDomainOverride.ymin;
+  if(axisDomainOverride.ymax != null) d.ymax = axisDomainOverride.ymax;
+  if(!(d.xmin < d.xmax)){
+    d.xmin = autoDomain.xmin;
+    d.xmax = autoDomain.xmax;
+  }
+  if(!(d.ymin < d.ymax)){
+    d.ymin = autoDomain.ymin;
+    d.ymax = autoDomain.ymax;
+  }
+  return d;
+}
+
+function clampPlotDomain(candidate, baseDomain){
+  const baseSpanX = Math.max(baseDomain.xmax - baseDomain.xmin, 1e-6);
+  const baseSpanY = Math.max(baseDomain.ymax - baseDomain.ymin, 1e-6);
+  let xmin = Number(candidate.xmin), xmax = Number(candidate.xmax);
+  let ymin = Number(candidate.ymin), ymax = Number(candidate.ymax);
+  if(!Number.isFinite(xmin) || !Number.isFinite(xmax) || !Number.isFinite(ymin) || !Number.isFinite(ymax)){
+    return { ...baseDomain };
+  }
+  let spanX = xmax - xmin;
+  let spanY = ymax - ymin;
+  const minSpanX = Math.max(baseSpanX / 500, 1e-6);
+  const minSpanY = Math.max(baseSpanY / 500, 1e-6);
+  const maxSpanX = Math.max(baseSpanX * 50, 10);
+  const maxSpanY = Math.max(baseSpanY * 50, 10);
+  if(!(spanX > 0) || !(spanY > 0)) return { ...baseDomain };
+  if(spanX < minSpanX){
+    const cx = (xmin + xmax) / 2;
+    spanX = minSpanX;
+    xmin = cx - spanX / 2;
+    xmax = cx + spanX / 2;
+  }
+  if(spanY < minSpanY){
+    const cy = (ymin + ymax) / 2;
+    spanY = minSpanY;
+    ymin = cy - spanY / 2;
+    ymax = cy + spanY / 2;
+  }
+  if(spanX > maxSpanX){
+    const cx = (xmin + xmax) / 2;
+    spanX = maxSpanX;
+    xmin = cx - spanX / 2;
+    xmax = cx + spanX / 2;
+  }
+  if(spanY > maxSpanY){
+    const cy = (ymin + ymax) / 2;
+    spanY = maxSpanY;
+    ymin = cy - spanY / 2;
+    ymax = cy + spanY / 2;
+  }
+  return { xmin, xmax, ymin, ymax };
+}
+
+function getDisplayPlotDomain(baseDomain){
+  if(!plotViewDomain) return { ...baseDomain };
+  return clampPlotDomain(plotViewDomain, baseDomain);
+}
+
+function updateAxisInputPlaceholders(autoDomain){
+  [
+    ["xMinInput", autoDomain.xmin],
+    ["xMaxInput", autoDomain.xmax],
+    ["yMinInput", autoDomain.ymin],
+    ["yMaxInput", autoDomain.ymax]
+  ].forEach(([id, value]) => {
+    const el = document.getElementById(id);
+    if(el) el.placeholder = fmt(value);
+  });
+}
+
+function setPlotReadout(text){
+  const el = document.getElementById("plotReadout");
+  if(el) el.textContent = text;
+}
+
+function describeClickedCoordinate(x, y, node, hsNode){
+  const z = objective({x, y}, currentModel.obj);
+  const inNode = feasible({x, y}, hsNode);
+  const rootHs = buildHalfspaces(currentModel.cons, {x1min:null,x1max:null,x2min:null,x2max:null}, true);
+  const inRoot = feasible({x, y}, rootHs);
+  const nearest = { x: Math.round(x), y: Math.round(y) };
+  const nearestFeasible = feasible(nearest, hsNode);
+  return [
+    `Ponto selecionado: x₁=${fmt(x)}, x₂=${fmt(y)}`,
+    `Objetivo (${currentModel.sense}): z=${fmt(z)}`,
+    `Região global: ${inRoot ? "factível" : "fora da região"}`,
+    `Região do nó ${node.id}: ${inNode ? "factível" : "fora da região"}`,
+    `Inteiro mais próximo: (${nearest.x}, ${nearest.y}) · ${nearestFeasible ? "factível neste nó" : "não factível neste nó"}`
+  ].join("\n");
+}
+
+function svgClientToMath(clientX, clientY){
+  if(!currentPlotGeometry) return null;
+  const svg = document.getElementById("svgPlot");
+  const rect = svg.getBoundingClientRect();
+  const vbX = PLOT_BASE_VB.x + ((clientX - rect.left) / rect.width) * PLOT_BASE_VB.w;
+  const vbY = PLOT_BASE_VB.y + ((clientY - rect.top) / rect.height) * PLOT_BASE_VB.h;
+  const { W, H, m, domain } = currentPlotGeometry;
+  const plotW = W - m.l - m.r;
+  const plotH = H - m.t - m.b;
+  const x = domain.xmin + ((vbX - m.l) / plotW) * (domain.xmax - domain.xmin);
+  const y = domain.ymin + ((H - m.b - vbY) / plotH) * (domain.ymax - domain.ymin);
+  return { x, y, vbX, vbY };
+}
+
+function drawPlot(){
+  const svg = document.getElementById("svgPlot");
+  const root = lpRelax(currentModel, {x1min:null,x1max:null,x2min:null,x2max:null});
+  const node = currentRun.nodes[currentNode];
+  const hsNode = buildHalfspaces(currentModel.cons, node.bounds, true);
+  const polyNode = polygonFromHalfspaces(hsNode);
+  const polyRoot = root ? root.polygon : [];
+
+  const autoDomain = inferPlotDomain(currentModel, node, root);
+  lastAutoPlotDomain = autoDomain;
+  updateAxisInputPlaceholders(autoDomain);
+  const baseDomain = getBasePlotDomain(autoDomain);
+  const domain = getDisplayPlotDomain(baseDomain);
+  plotViewDomain = plotViewDomain ? { ...domain } : null;
+
+  const W=1080, H=720, m={l:78,r:28,t:24,b:64};
+  const plotW=W-m.l-m.r, plotH=H-m.t-m.b;
+  const X = x => m.l + ((x - domain.xmin)/(domain.xmax - domain.xmin))*plotW;
+  const Y = y => H-m.b - ((y - domain.ymin)/(domain.ymax - domain.ymin))*plotH;
+  currentPlotGeometry = { domain, baseDomain, W, H, m };
+
+  const showHalfspaces = document.getElementById("showHalfspaces").checked;
+  const showIntegers   = document.getElementById("showIntegers").checked;
+  const showNodeRegion = document.getElementById("showNodeRegion").checked;
+  const showVertices   = document.getElementById("showVertices").checked;
+  const showLineLabels = document.getElementById("showLineLabels").checked;
+
+  const xTicks = buildTicks(domain.xmin, domain.xmax, 9);
+  const yTicks = buildTicks(domain.ymin, domain.ymax, 8);
+  const out = [];
+  out.push(`<rect x="0" y="0" width="${W}" height="${H}" fill="#05080f"/>`);
+  out.push(`<defs>
+    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="4" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="glow-sm" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="2" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <radialGradient id="incumbentGrad" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#ff4d6d"/>
+      <stop offset="100%" stop-color="#c41234"/>
+    </radialGradient>
+    <radialGradient id="lpGrad" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#ffe566"/>
+      <stop offset="100%" stop-color="#d4a200"/>
+    </radialGradient>
+  </defs>`);
+
+  xTicks.forEach(v => {
+    out.push(`<line x1="${X(v)}" y1="${Y(domain.ymin)}" x2="${X(v)}" y2="${Y(domain.ymax)}" stroke="rgba(255,255,255,0.045)" stroke-width="1"/>`);
+    out.push(`<text x="${X(v)}" y="${Y(domain.ymin)+26}" fill="rgba(168,180,216,0.7)" font-size="12" text-anchor="middle" font-family="'IBM Plex Mono',monospace">${escapeXml(fmt(v))}</text>`);
+  });
+  yTicks.forEach(v => {
+    out.push(`<line x1="${X(domain.xmin)}" y1="${Y(v)}" x2="${X(domain.xmax)}" y2="${Y(v)}" stroke="rgba(255,255,255,0.045)" stroke-width="1"/>`);
+    out.push(`<text x="${X(domain.xmin)-14}" y="${Y(v)+4}" fill="rgba(168,180,216,0.7)" font-size="12" text-anchor="end" font-family="'IBM Plex Mono',monospace">${escapeXml(fmt(v))}</text>`);
+  });
+
+  if(domain.ymin <= 0 && 0 <= domain.ymax){
+    out.push(`<line x1="${X(domain.xmin)}" y1="${Y(0)}" x2="${X(domain.xmax)}" y2="${Y(0)}" stroke="rgba(255,255,255,0.28)" stroke-width="2"/>`);
+    out.push(`<text x="${X(domain.xmax)-6}" y="${Y(0)+42}" fill="rgba(232,238,255,0.82)" font-size="16" text-anchor="end" font-family="'IBM Plex Mono',monospace" font-style="italic">x₁</text>`);
+  }
+  if(domain.xmin <= 0 && 0 <= domain.xmax){
+    out.push(`<line x1="${X(0)}" y1="${Y(domain.ymin)}" x2="${X(0)}" y2="${Y(domain.ymax)}" stroke="rgba(255,255,255,0.28)" stroke-width="2"/>`);
+    out.push(`<text x="${X(0)-28}" y="${Y(domain.ymax)+6}" fill="rgba(232,238,255,0.82)" font-size="16" text-anchor="end" font-family="'IBM Plex Mono',monospace" font-style="italic">x₂</text>`);
+  }
+
+  const canvasRect = [
+    {x:domain.xmin,y:domain.ymin},
+    {x:domain.xmax,y:domain.ymin},
+    {x:domain.xmax,y:domain.ymax},
+    {x:domain.xmin,y:domain.ymax}
+  ];
+
+  if(showHalfspaces){
+    currentModel.cons.forEach((h) => {
+      const clipped = clipPolygonWithHalfspace(canvasRect, h);
+      if(clipped.length >= 3){
+        const info = `Semiplano da restrição
+${h.raw}`;
+        out.push(`<polygon class="inspectable" data-click-info="${escapeAttr(info)}" points="${clipped.map(p=>`${X(p.x)},${Y(p.y)}`).join(" ")}" fill="${h.color}18" stroke="none"><title>Semiplano: ${escapeXml(h.raw)}</title></polygon>`);
+      }
+    });
+  }
+
+  if(polyRoot.length >= 3){
+    out.push(`<polygon class="inspectable" data-click-info="${escapeAttr(`Região factível global\nPolígono do relaxamento linear na raiz.`)}" points="${polyRoot.map(p=>`${X(p.x)},${Y(p.y)}`).join(" ")}" fill="rgba(0,229,160,0.15)" stroke="rgba(0,229,160,0.6)" stroke-width="1.8"/>`);
+  }
+
+  if(showNodeRegion && polyNode.length >= 3){
+    out.push(`<polygon class="inspectable" data-click-info="${escapeAttr(`Região do nó ${node.id}
+${node.branch}
+${node.status}`)}" points="${polyNode.map(p=>`${X(p.x)},${Y(p.y)}`).join(" ")}" fill="rgba(0,212,255,0.12)" stroke="rgba(0,212,255,0.7)" stroke-dasharray="8 5" stroke-width="2"/>`);
+  }
+
+  currentModel.cons.forEach((h, i) => {
+    const seg = lineSegmentForHalfspace(h, domain.xmin, domain.xmax, domain.ymin, domain.ymax);
+    if(!seg) return;
+    out.push(`<line class="inspectable" data-click-info="${escapeAttr(`Restrição C${i+1}
+${h.raw}`)}" x1="${X(seg[0].x)}" y1="${Y(seg[0].y)}" x2="${X(seg[1].x)}" y2="${Y(seg[1].y)}" stroke="${h.color}" stroke-width="2.5" opacity="0.9"><title>${escapeXml(h.raw)}</title></line>`);
+    if(showLineLabels){
+      const p = seg[1];
+      const labelX = X(p.x), labelY = Y(p.y);
+      const labelN = currentModel.displayCons.findIndex(d => d === h.raw) + 1 || (i+1);
+      out.push(`<g pointer-events="none">
+        <rect x="${labelX-14}" y="${labelY-22}" width="28" height="16" rx="3" fill="rgba(5,8,15,0.85)" stroke="${h.color}" stroke-width="1" opacity="0.9"/>
+        <text x="${labelX}" y="${labelY-10}" fill="${h.color}" font-size="10" text-anchor="middle" font-weight="700" font-family="'IBM Plex Mono',monospace">C${labelN}</text>
+      </g>`);
+    }
+  });
+
+  const b = node.bounds;
+  if(b.x1min != null) out.push(`<line class="inspectable" data-click-info="${escapeAttr(`Limite do nó
+x1 ≥ ${b.x1min}`)}" x1="${X(b.x1min)}" y1="${Y(domain.ymin)}" x2="${X(b.x1min)}" y2="${Y(domain.ymax)}" stroke="rgba(255,255,255,0.35)" stroke-width="1.5" stroke-dasharray="5 4"><title>x1 ≥ ${b.x1min}</title></line>`);
+  if(b.x1max != null) out.push(`<line class="inspectable" data-click-info="${escapeAttr(`Limite do nó
+x1 ≤ ${b.x1max}`)}" x1="${X(b.x1max)}" y1="${Y(domain.ymin)}" x2="${X(b.x1max)}" y2="${Y(domain.ymax)}" stroke="rgba(255,255,255,0.35)" stroke-width="1.5" stroke-dasharray="5 4"><title>x1 ≤ ${b.x1max}</title></line>`);
+  if(b.x2min != null) out.push(`<line class="inspectable" data-click-info="${escapeAttr(`Limite do nó
+x2 ≥ ${b.x2min}`)}" x1="${X(domain.xmin)}" y1="${Y(b.x2min)}" x2="${X(domain.xmax)}" y2="${Y(b.x2min)}" stroke="rgba(255,255,255,0.35)" stroke-width="1.5" stroke-dasharray="5 4"><title>x2 ≥ ${b.x2min}</title></line>`);
+  if(b.x2max != null) out.push(`<line class="inspectable" data-click-info="${escapeAttr(`Limite do nó
+x2 ≤ ${b.x2max}`)}" x1="${X(domain.xmin)}" y1="${Y(b.x2max)}" x2="${X(domain.xmax)}" y2="${Y(b.x2max)}" stroke="rgba(255,255,255,0.35)" stroke-width="1.5" stroke-dasharray="5 4"><title>x2 ≤ ${b.x2max}</title></line>`);
+
+  if(showIntegers){
+    const ixMin = Math.max(-250, Math.floor(domain.xmin));
+    const ixMax = Math.min(250, Math.ceil(domain.xmax));
+    const iyMin = Math.max(-250, Math.floor(domain.ymin));
+    const iyMax = Math.min(250, Math.ceil(domain.ymax));
+    const totalCandidates = (ixMax - ixMin + 1) * (iyMax - iyMin + 1);
+    if(totalCandidates <= 30000){
+      const cacheKey = `${currentNode}|${ixMin}|${ixMax}|${iyMin}|${iyMax}`;
+      feasibleIntegerPoints(hsNode, ixMin, ixMax, iyMin, iyMax, cacheKey).forEach(p => {
+        const isBest = currentRun.incumbent.point && p.x===currentRun.incumbent.point.x && p.y===currentRun.incumbent.point.y;
+        const fill = isBest ? "url(#incumbentGrad)" : "#a78bfa";
+        const r = isBest ? 7 : 4.5;
+        const strokeColor = isBest ? "rgba(255,150,170,0.8)" : "rgba(200,190,255,0.5)";
+        const info = `(x₁,x₂)=(${p.x},${p.y})\nz=${fmt(objective(p,currentModel.obj))}${isBest ? '\nMelhor solução inteira atual' : ''}`;
+        out.push(`<circle class="inspectable" data-click-info="${escapeAttr(info)}" data-plot-x="${p.x}" data-plot-y="${p.y}" cx="${X(p.x)}" cy="${Y(p.y)}" r="${r}" fill="${fill}" stroke="${strokeColor}" stroke-width="${isBest?1.8:1}" ${isBest?'filter="url(#glow-sm)"':''}>
+          <title>(x₁,x₂)=(${p.x},${p.y}) | z=${fmt(objective(p,currentModel.obj))}</title>
+        </circle>`);
+      });
+    }
+  }
+
+  if(showVertices){
+    polyNode.forEach(p => {
+      out.push(`<circle class="inspectable" data-click-info="${escapeAttr(`Vértice do nó ${node.id}
+(${fmt(p.x)}, ${fmt(p.y)})
+z=${fmt(objective(p,currentModel.obj))}`)}" data-plot-x="${p.x}" data-plot-y="${p.y}" cx="${X(p.x)}" cy="${Y(p.y)}" r="5" fill="rgba(255,255,255,0.85)" stroke="#05080f" stroke-width="1.5">
+        <title>Vértice (${fmt(p.x)}, ${fmt(p.y)})</title>
+      </circle>`);
+    });
+  }
+
+  if(root){
+    out.push(`<circle class="inspectable" data-click-info="${escapeAttr(`Solução LP da raiz
+(${fmt(root.point.x)}, ${fmt(root.point.y)})
+z=${fmt(root.value)}`)}" data-plot-x="${root.point.x}" data-plot-y="${root.point.y}" cx="${X(root.point.x)}" cy="${Y(root.point.y)}" r="9" fill="url(#lpGrad)" stroke="rgba(255,230,100,0.8)" stroke-width="2" filter="url(#glow)">
+      <title>Solução LP: (${fmt(root.point.x)}, ${fmt(root.point.y)}) | z=${fmt(root.value)}</title>
+    </circle>`);
+    out.push(`<text x="${X(root.point.x)+14}" y="${Y(root.point.y)-10}" fill="#ffe566" font-size="12" font-weight="700" font-family="'IBM Plex Mono',monospace">LP</text>`);
+  }
+
+  if(currentRun.incumbent.point){
+    out.push(`<circle class="inspectable" data-click-info="${escapeAttr(`Melhor solução inteira
+(${fmt(currentRun.incumbent.point.x)}, ${fmt(currentRun.incumbent.point.y)})
+z=${fmt(currentRun.incumbent.value)}`)}" data-plot-x="${currentRun.incumbent.point.x}" data-plot-y="${currentRun.incumbent.point.y}" cx="${X(currentRun.incumbent.point.x)}" cy="${Y(currentRun.incumbent.point.y)}" r="11" fill="url(#incumbentGrad)" stroke="rgba(255,120,140,0.9)" stroke-width="2.5" filter="url(#glow)">
+      <title>Ótimo inteiro: (${fmt(currentRun.incumbent.point.x)}, ${fmt(currentRun.incumbent.point.y)}) | z=${fmt(currentRun.incumbent.value)}</title>
+    </circle>`);
+    out.push(`<text x="${X(currentRun.incumbent.point.x)+16}" y="${Y(currentRun.incumbent.point.y)+5}" fill="rgba(255,120,140,0.95)" font-size="12" font-weight="700" font-family="'IBM Plex Mono',monospace">Ótimo</text>`);
+  }
+
+  if(plotSelection && plotSelection.x != null && plotSelection.y != null){
+    out.push(`<line class="plot-hover-crosshair" x1="${X(plotSelection.x)}" y1="${Y(domain.ymin)}" x2="${X(plotSelection.x)}" y2="${Y(domain.ymax)}" stroke="rgba(255,255,255,0.18)" stroke-width="1" stroke-dasharray="4 4"/>`);
+    out.push(`<line class="plot-hover-crosshair" x1="${X(domain.xmin)}" y1="${Y(plotSelection.y)}" x2="${X(domain.xmax)}" y2="${Y(plotSelection.y)}" stroke="rgba(255,255,255,0.18)" stroke-width="1" stroke-dasharray="4 4"/>`);
+    out.push(`<circle class="plot-hover-crosshair" cx="${X(plotSelection.x)}" cy="${Y(plotSelection.y)}" r="5.5" fill="none" stroke="#ffffff" stroke-width="1.5"/>`);
+  }
+
+  const info = node.res
+    ? `Nó ${node.id}  ·  ${node.branch}  ·  x*=(${fmt(node.res.point.x)}, ${fmt(node.res.point.y)})  ·  z*=${fmt(node.res.value)}  ·  ${node.status}`
+    : `Nó ${node.id}  ·  ${node.branch}  ·  ${node.status}`;
+  out.push(`<rect x="18" y="16" width="720" height="40" rx="10" fill="rgba(5,8,15,0.82)" stroke="rgba(255,255,255,0.08)"/>`);
+  out.push(`<text x="34" y="41" fill="rgba(232,238,255,0.9)" font-size="13" font-weight="600" font-family="'IBM Plex Mono',monospace">${escapeXml(info)}</text>`);
+
+  svg.innerHTML = out.join("");
+}
+
+/* ═══════════════════════════════════════════════════════════
+   TREE LAYOUT (subtree-leaf-count algorithm)
+   ═══════════════════════════════════════════════════════════ */
+function layoutTree(nodes){
+  if(nodes.length === 0) return { pos: {}, totalLeaves: 1, maxDepth: 0 };
+  const children = {};
+  nodes.forEach(n => {
+    if(n.parent != null){
+      (children[n.parent] = children[n.parent] || []).push(n);
+    }
+  });
+  // Sort children by id for stable layout
+  Object.values(children).forEach(arr => arr.sort((a,b)=>a.id-b.id));
+
+  const root = nodes.find(n => n.parent == null);
+  if(!root) return { pos: {}, totalLeaves: 1, maxDepth: 0 };
+
+  const leaves = {};
+  function countLeaves(id){
+    const kids = children[id] || [];
+    if(kids.length === 0){ leaves[id] = 1; return 1; }
+    let sum = 0;
+    kids.forEach(c => sum += countLeaves(c.id));
+    leaves[id] = sum;
+    return sum;
+  }
+  countLeaves(root.id);
+
+  const pos = {};
+  let maxDepth = 0;
+  function assign(id, startX, depth){
+    maxDepth = Math.max(maxDepth, depth);
+    const kids = children[id] || [];
+    if(kids.length === 0){
+      pos[id] = { x: startX + 0.5, depth };
+      return;
+    }
+    let cursor = startX;
+    kids.forEach(c => {
+      assign(c.id, cursor, depth+1);
+      cursor += leaves[c.id];
+    });
+    const first = pos[kids[0].id].x;
+    const last  = pos[kids[kids.length-1].id].x;
+    pos[id] = { x: (first + last) / 2, depth };
+  }
+  assign(root.id, 0, 0);
+
+  return { pos, totalLeaves: leaves[root.id], maxDepth };
+}
+
+function drawTree(){
+  const svg = document.getElementById("treeSvg");
+  const nodes = currentRun.nodes;
+  const { pos, totalLeaves, maxDepth } = layoutTree(nodes);
+
+  const NODE_SPACING = 70;
+  const ROW_HEIGHT = 60;
+  const PAD_X = 50, PAD_Y = 36;
+  const W = Math.max(960, totalLeaves * NODE_SPACING + 2*PAD_X);
+  const H = Math.max(220, (maxDepth+1) * ROW_HEIGHT + 2*PAD_Y);
+
+  svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
+  svg.setAttribute("width", W);
+
+  const xy = id => ({
+    x: PAD_X + pos[id].x * (W - 2*PAD_X) / Math.max(1, totalLeaves),
+    y: PAD_Y + pos[id].depth * ROW_HEIGHT
+  });
+
+  const nodeColor = n => {
+    if(n.status === STATUS.INT) return { fill:"rgba(0,229,160,0.15)", stroke:"rgba(0,229,160,0.6)" };
+    if(n.status === STATUS.INFEAS) return { fill:"rgba(255,77,109,0.15)", stroke:"rgba(255,77,109,0.5)" };
+    if(n.status === STATUS.BOUND) return { fill:"rgba(245,166,35,0.15)", stroke:"rgba(245,166,35,0.4)" };
+    if(n.status === STATUS.BRANCH) return { fill:"rgba(0,212,255,0.1)", stroke:"rgba(0,212,255,0.35)" };
+    return { fill:"rgba(255,255,255,0.05)", stroke:"rgba(255,255,255,0.2)" };
+  };
+
+  const out = [];
+  out.push(`<defs>
+    <filter id="treeGlow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="3" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>`);
+
+  // Edges
+  nodes.forEach(n => {
+    if(n.parent != null && pos[n.parent] && pos[n.id]){
+      const p = xy(n.parent), c = xy(n.id);
+      // Soft curve
+      const midY = (p.y + c.y)/2;
+      out.push(`<path d="M ${p.x} ${p.y} C ${p.x} ${midY}, ${c.x} ${midY}, ${c.x} ${c.y}" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="1.5"/>`);
+      const mx = (p.x+c.x)/2, my = (p.y+c.y)/2 - 4;
+      out.push(`<text x="${mx}" y="${my}" fill="rgba(168,180,216,0.6)" font-size="10" text-anchor="middle" font-family="'IBM Plex Mono',monospace">${escapeXml(n.branch)}</text>`);
+    }
+  });
+
+  // Nodes (using data attributes for delegated click handling)
+  nodes.forEach((n, idx) => {
+    const p = xy(n.id);
+    const active = idx === currentNode;
+    const col = nodeColor(n);
+    const r = active ? 22 : 18;
+
+    if(active){
+      out.push(`<circle cx="${p.x}" cy="${p.y}" r="${r+6}" fill="rgba(245,166,35,0.08)" filter="url(#treeGlow)"/>`);
+    }
+    out.push(`<g class="tree-node" data-node-idx="${idx}" style="cursor:pointer">
+      <circle cx="${p.x}" cy="${p.y}" r="${r}" fill="${active ? 'rgba(245,166,35,0.18)' : col.fill}" stroke="${active ? '#f5a623' : col.stroke}" stroke-width="${active ? 2 : 1.5}"/>
+      <text x="${p.x}" y="${p.y+4}" fill="${active ? '#f5a623' : '#e8eeff'}" font-size="12" text-anchor="middle" font-weight="700" font-family="'IBM Plex Mono',monospace" pointer-events="none">${n.id}</text>
+    </g>`);
+  });
+
+  svg.innerHTML = out.join("");
+
+}
+
+/* ═══════════════════════════════════════════════════════════
+   TRACE / LOG / PANELS
+   ═══════════════════════════════════════════════════════════ */
+function buildTraceText(n){
+  const lines = [];
+  lines.push(`Nó ${n.id} (${n.branch})`);
+  lines.push(`Status: ${n.status}`);
+  lines.push(`Bounds: x1∈[${n.bounds.x1min ?? "-∞"}, ${n.bounds.x1max ?? "+∞"}], x2∈[${n.bounds.x2min ?? "-∞"}, ${n.bounds.x2max ?? "+∞"}]`);
+  if(n.res){
+    lines.push(`LP do nó: x*=(${fmt(n.res.point.x)}, ${fmt(n.res.point.y)}), z*=${fmt(n.res.value)}`);
+  }
+  if(n.branchOn) lines.push(`Ramificação: ${n.branchOn}`);
+  if(n.newIncumbent) lines.push(`Resultado: este nó atualizou o incumbente.`);
+  if(n.status === STATUS.BOUND) lines.push(`Motivo: o bound LP do nó não supera a melhor solução inteira.`);
+  if(n.status === STATUS.INFEAS) lines.push(`Motivo: a região do nó ficou vazia no relaxamento linear.`);
+  if(n.status === STATUS.INT) lines.push(`Motivo: a solução LP já satisfaz as exigências de integralidade.`);
+  return lines.join("\n");
+}
+
+function drawLog(){
+  const box = document.getElementById("logBox");
+  const rows = currentRun.nodes.map((n, idx) => {
+    const status = n.status || "—";
+    const key = STATUS_KEYS[status] || "";
+    const detail = n.res
+      ? `z=${fmt(n.res.value)}`
+      : "—";
+    const star = n.newIncumbent ? ' <span style="color:var(--green)">★</span>' : '';
+    return `<div class="log-row ${idx===currentNode?'active':''}" data-node-idx="${idx}">
+      <div class="lid">${n.id}</div>
+      <div>${escapeXml(n.branch)} · <span class="ldetail">${detail}</span>${star}</div>
+      <div class="lstatus s-${key}">${status}</div>
+    </div>`;
+  });
+  box.innerHTML = rows.join("");
+}
+
+function updatePanels(){
+  const node = currentRun.nodes[currentNode];
+  document.getElementById("nodeDesc").textContent = node.res
+    ? `Nó ${node.id} · ${node.branch} · x*=(${fmt(node.res.point.x)}, ${fmt(node.res.point.y)}) · z*=${fmt(node.res.value)} · ${node.status}`
+    : `Nó ${node.id} · ${node.branch} · ${node.status}`;
+
+  const tags = [];
+  const cls = STATUS_KEYS[node.status] || "";
+  tags.push(`<span class="tag status-${cls}">${node.status}</span>`);
+  if(node.branchOn) tags.push(`<span class="tag">${escapeXml(node.branchOn)}</span>`);
+  if(node.newIncumbent) tags.push(`<span class="tag" style="background:rgba(0,229,160,0.1);border-color:rgba(0,229,160,0.3);color:var(--green)">★ novo incumbente</span>`);
+  tags.push(`<span class="tag">x1 ∈ [${node.bounds.x1min ?? "-∞"}, ${node.bounds.x1max ?? "+∞"}] · x2 ∈ [${node.bounds.x2min ?? "-∞"}, ${node.bounds.x2max ?? "+∞"}]</span>`);
+
+  document.getElementById("nodeTags").innerHTML = tags.join("");
+  document.getElementById("traceBox").textContent = buildTraceText(node);
+  document.getElementById("nodeIndexPill").textContent = `Nó ${currentNode} / ${Math.max(0, currentRun.nodes.length-1)}`;
+  document.getElementById("prevBtn").disabled = currentNode === 0;
+  document.getElementById("nextBtn").disabled = currentNode === currentRun.nodes.length - 1;
+  document.getElementById("nodeSlider").value = String(currentNode);
+}
+
+function drawAll(){
+  drawPlot();
+  drawTree();
+  drawLog();
+  updatePanels();
+}
+
+/* ═══════════════════════════════════════════════════════════
+   PLAY / NAV
+   ═══════════════════════════════════════════════════════════ */
+function stopPlay(){
+  if(playTimer){ clearInterval(playTimer); playTimer = null; }
+  document.getElementById("playBtn").textContent = "▶ Play";
+}
+
+function togglePlay(){
+  if(playTimer){ stopPlay(); return; }
+  if(!currentRun || currentRun.nodes.length <= 1) return;
+  if(currentNode >= currentRun.nodes.length - 1) return;
+  document.getElementById("playBtn").textContent = "❚❚ Pause";
+  playTimer = setInterval(() => {
+    if(currentNode >= currentRun.nodes.length - 1){ stopPlay(); return; }
+    currentNode += 1;
+    drawAll();
+  }, playInterval);
+}
+
+function gotoNode(idx){
+  if(!currentRun) return;
+  const max = currentRun.nodes.length - 1;
+  currentNode = Math.max(0, Math.min(max, idx));
+  drawAll();
+}
+
+/* ═══════════════════════════════════════════════════════════
+   RENDER
+   ═══════════════════════════════════════════════════════════ */
+function render(modelText){
+  clearError();
+  clearStatus();
+  let model;
+  try {
+    model = parseModel(modelText);
+  } catch(err){
+    showError(err.message);
+    return false;
+  }
+
+  currentModel = model;
+  integerPointsCache.clear();
+  currentRun = runBB(model);
+  currentNode = 0;
+  plotSelection = null;
+  stopPlay();
+  resetPlotZoom(false);
+
+  const root = lpRelax(model, {x1min:null,x1max:null,x2min:null,x2max:null});
+  if(root){
+    lastAutoPlotDomain = inferPlotDomain(model, currentRun.nodes[0], root);
+    updateAxisInputPlaceholders(lastAutoPlotDomain);
+  }
+  setPlotReadout("Clique em qualquer região, reta, vértice ou ponto para inspecionar valores.\nTambém é possível clicar no fundo para ler coordenadas e valor da função objetivo.");
+
+  // Stats
+  document.getElementById("bestZ").textContent = currentRun.incumbent.point ? fmt(currentRun.incumbent.value) : "—";
+  document.getElementById("bestX").textContent = currentRun.incumbent.point
+    ? `(${fmt(currentRun.incumbent.point.x)}, ${fmt(currentRun.incumbent.point.y)})`
+    : "—";
+  document.getElementById("lpX").textContent = root ? `(${fmt(root.point.x)}, ${fmt(root.point.y)})` : "—";
+  document.getElementById("lpZ").textContent = root ? fmt(root.value) : "—";
+  document.getElementById("nodeCount").textContent = String(currentRun.nodes.length);
+
+  // Gap
+  if(root && currentRun.incumbent.point){
+    const gap = Math.abs(root.value - currentRun.incumbent.value);
+    document.getElementById("gapVal").textContent = fmt(gap);
+  } else {
+    document.getElementById("gapVal").textContent = "—";
+  }
+
+  // Constraints with color swatches
+  document.getElementById("constraintList").innerHTML = model.displayCons.map((c, i) => {
+    const color = COLORS[i % COLORS.length];
+    return `<div class="crow">
+      <span class="cnum">C${i+1}</span>
+      <span class="cswatch" style="background:${color}"></span>
+      <span>${escapeXml(c)}</span>
+    </div>`;
+  }).join("");
+
+  // Slider
+  const slider = document.getElementById("nodeSlider");
+  slider.max = Math.max(0, currentRun.nodes.length - 1);
+  slider.value = "0";
+
+  // Solution status banners
+  if(!root){
+    showStatus("Modelo inviável: a região factível está vazia.", "error");
+  } else if(!currentRun.incumbent.point){
+    const declMsg = (model.isInt[1] || model.isInt[2])
+      ? "Sem solução inteira viável dentro da região factível."
+      : "Nenhuma solução encontrada.";
+    showStatus(declMsg, "warn");
+  }
+
+  drawAll();
+  return true;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   EXPORT
+   ═══════════════════════════════════════════════════════════ */
+function buildExportSVG(){
+  // Use a fresh SVG string with explicit dimensions and inline-safe fonts
+  const W = 1080, H = 720;
+  const svg = document.getElementById("svgPlot");
+  // Clone current contents but use the BASE viewBox so the export isn't zoomed
+  const inner = svg.innerHTML;
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}">${inner}</svg>`;
+}
+
+function exportSVG(){
+  const source = buildExportSVG();
+  const blob = new Blob([source], { type: "image/svg+xml;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "pli_2d_visualizacao.svg";
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+function exportPNG(){
+  const source = buildExportSVG();
+  const blob = new Blob([source], { type: "image/svg+xml;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const img = new Image();
+  img.onload = function(){
+    const scale = 1.5;
+    const canvas = document.createElement("canvas");
+    canvas.width = 1080 * scale;
+    canvas.height = 720 * scale;
+    const ctx = canvas.getContext("2d");
+    ctx.fillStyle = "#05080f";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+    URL.revokeObjectURL(url);
+    canvas.toBlob(blob2 => {
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob2);
+      a.download = "pli_2d_visualizacao.png";
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+    }, "image/png");
+  };
+  img.onerror = function(){
+    URL.revokeObjectURL(url);
+    alert("Falha ao gerar PNG. Tente exportar como SVG.");
+  };
+  img.src = url;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   PAN / ZOOM ON PLOT
+   ═══════════════════════════════════════════════════════════ */
+function zoomPlotAt(anchor, factor){
+  if(!currentPlotGeometry || !anchor) return;
+  const base = currentPlotGeometry.baseDomain || currentPlotGeometry.domain;
+  const d = plotViewDomain ? { ...plotViewDomain } : { ...currentPlotGeometry.domain };
+  const spanX = d.xmax - d.xmin;
+  const spanY = d.ymax - d.ymin;
+  const px = spanX > 0 ? (anchor.x - d.xmin) / spanX : 0.5;
+  const py = spanY > 0 ? (anchor.y - d.ymin) / spanY : 0.5;
+  const newSpanX = spanX * factor;
+  const newSpanY = spanY * factor;
+  plotViewDomain = clampPlotDomain({
+    xmin: anchor.x - px * newSpanX,
+    xmax: anchor.x + (1 - px) * newSpanX,
+    ymin: anchor.y - py * newSpanY,
+    ymax: anchor.y + (1 - py) * newSpanY
+  }, base);
+  drawPlot();
+}
+
+function panPlotBy(dx, dy){
+  if(!currentPlotGeometry) return;
+  const base = currentPlotGeometry.baseDomain || currentPlotGeometry.domain;
+  const d = plotViewDomain ? { ...plotViewDomain } : { ...currentPlotGeometry.domain };
+  plotViewDomain = clampPlotDomain({
+    xmin: d.xmin + dx,
+    xmax: d.xmax + dx,
+    ymin: d.ymin + dy,
+    ymax: d.ymax + dy
+  }, base);
+  drawPlot();
+}
+
+(function setupPanZoom(){
+  // Interações de pan/zoom diretas no SVG (wheel, drag do mouse, pinça touch)
+  // foram intencionalmente removidas. O gráfico só pode ser controlado por:
+  //   • Campos de "Escala dos eixos" (xMin/xMax/yMin/yMax)
+  //   • Botões de Navegação (Reset, ＋ Zoom, − Zoom)
+  // O clique no SVG continua ativo para inspeção (bindPlotInspector).
+})();
+
+function applyAxesFromInputs(){
+  const parseAxis = (id) => {
+    const raw = document.getElementById(id).value.trim();
+    if(raw === "") return null;
+    const val = Number(raw);
+    return Number.isFinite(val) ? val : null;
+  };
+  const candidate = {
+    xmin: parseAxis("xMinInput"),
+    xmax: parseAxis("xMaxInput"),
+    ymin: parseAxis("yMinInput"),
+    ymax: parseAxis("yMaxInput")
+  };
+  const autoDomain = lastAutoPlotDomain || { xmin: -1, xmax: 8, ymin: -1, ymax: 8 };
+  const effective = {
+    xmin: candidate.xmin ?? autoDomain.xmin,
+    xmax: candidate.xmax ?? autoDomain.xmax,
+    ymin: candidate.ymin ?? autoDomain.ymin,
+    ymax: candidate.ymax ?? autoDomain.ymax
+  };
+  if(!(effective.xmin < effective.xmax) || !(effective.ymin < effective.ymax)){
+    alert("Os limites dos eixos precisam obedecer mín < máx.");
+    return;
+  }
+  axisDomainOverride = candidate;
+  plotViewDomain = null;
+  plotSelection = null;
+  resetPlotZoom(false);
+  drawPlot();
+}
+
+function clearManualAxes(){
+  axisDomainOverride = { xmin: null, xmax: null, ymin: null, ymax: null };
+  plotViewDomain = null;
+  ["xMinInput","xMaxInput","yMinInput","yMaxInput"].forEach(id => {
+    document.getElementById(id).value = "";
+  });
+  plotSelection = null;
+  resetPlotZoom(false);
+  drawPlot();
+}
+
+function bindPlotInspector(){
+  const svg = document.getElementById("svgPlot");
+  svg.addEventListener("click", (e) => {
+    if(suppressPlotClick || !currentRun || !currentModel) return;
+    const node = currentRun.nodes[currentNode];
+    const hsNode = buildHalfspaces(currentModel.cons, node.bounds, true);
+    const hit = e.target.closest(".inspectable");
+    if(hit){
+      const px = hit.getAttribute("data-plot-x");
+      const py = hit.getAttribute("data-plot-y");
+      if(px != null && py != null){
+        plotSelection = { x: Number(px), y: Number(py) };
+        drawPlot();
+      }
+      const info = hit.getAttribute("data-click-info");
+      if(info) setPlotReadout(info);
+      return;
+    }
+    const math = svgClientToMath(e.clientX, e.clientY);
+    if(!math || !Number.isFinite(math.x) || !Number.isFinite(math.y)) return;
+    plotSelection = { x: math.x, y: math.y };
+    drawPlot();
+    setPlotReadout(describeClickedCoordinate(math.x, math.y, node, hsNode));
+  });
+}
+
+/* ═══════════════════════════════════════════════════════════
+   EVENT WIRING
+   ═══════════════════════════════════════════════════════════ */
+document.getElementById("runBtn").onclick = () => {
+  render(document.getElementById("modelInput").value);
+};
+
+document.getElementById("demoBtn").onclick = () => {
+  document.getElementById("modelInput").value = `max = 17x1 + 12x2
+s.a
+10x1 + 7x2 <= 40
+x1 + x2 <= 5
+x1; x2 ∈ I`;
+  render(document.getElementById("modelInput").value);
+};
+
+document.getElementById("prevBtn").onclick = () => { stopPlay(); gotoNode(currentNode - 1); };
+document.getElementById("nextBtn").onclick = () => { stopPlay(); gotoNode(currentNode + 1); };
+document.getElementById("playBtn").onclick = togglePlay;
+document.getElementById("nodeSlider").oninput = e => { stopPlay(); gotoNode(Number(e.target.value)); };
+
+document.getElementById("speedSelect").onchange = e => {
+  playInterval = Number(e.target.value);
+  if(playTimer){ stopPlay(); togglePlay(); }
+};
+
+document.getElementById("exportPngBtn").onclick = exportPNG;
+document.getElementById("exportSvgBtn").onclick = exportSVG;
+
+document.getElementById("applyAxesBtn").onclick = applyAxesFromInputs;
+document.getElementById("autoAxesBtn").onclick = clearManualAxes;
+
+document.getElementById("resetZoomBtn").onclick = () => resetPlotZoom(true);
+document.getElementById("zoomInBtn").onclick = () => {
+  if(!currentPlotGeometry) return;
+  const d = currentPlotGeometry.domain;
+  zoomPlotAt({ x: (d.xmin + d.xmax) / 2, y: (d.ymin + d.ymax) / 2 }, 1 / 1.3);
+};
+document.getElementById("zoomOutBtn").onclick = () => {
+  if(!currentPlotGeometry) return;
+  const d = currentPlotGeometry.domain;
+  zoomPlotAt({ x: (d.xmin + d.xmax) / 2, y: (d.ymin + d.ymax) / 2 }, 1.3);
+};
+
+// Layer toggles
+["showHalfspaces","showIntegers","showNodeRegion","showVertices","showLineLabels"].forEach(id => {
+  document.getElementById(id).onchange = () => drawPlot();
+});
+
+bindPlotInspector();
+
+// Delegated click handlers
+document.getElementById("treeSvg").addEventListener("click", (e) => {
+  const g = e.target.closest(".tree-node");
+  if(g){ stopPlay(); gotoNode(Number(g.getAttribute("data-node-idx"))); }
+});
+
+document.getElementById("logBox").addEventListener("click", (e) => {
+  const row = e.target.closest(".log-row");
+  if(row){ stopPlay(); gotoNode(Number(row.getAttribute("data-node-idx"))); }
+});
+
+// Keyboard shortcuts
+document.addEventListener("keydown", (e) => {
+  const tag = e.target.tagName;
+  // In the textarea: Ctrl/Cmd+Enter triggers update
+  if(tag === "TEXTAREA"){
+    if((e.ctrlKey || e.metaKey) && e.key === "Enter"){
+      e.preventDefault();
+      render(document.getElementById("modelInput").value);
+    }
+    return;
+  }
+  if(tag === "INPUT"){
+    if(e.key === "Enter" && ["xMinInput","xMaxInput","yMinInput","yMaxInput"].includes(e.target.id)){
+      e.preventDefault();
+      applyAxesFromInputs();
+    }
+    return;
+  }
+  if(tag === "SELECT") return;
+
+  switch(e.key){
+    case "ArrowLeft":  e.preventDefault(); stopPlay(); gotoNode(currentNode - 1); break;
+    case "ArrowRight": e.preventDefault(); stopPlay(); gotoNode(currentNode + 1); break;
+    case " ":          e.preventDefault(); togglePlay(); break;
+    case "Home":       e.preventDefault(); stopPlay(); gotoNode(0); break;
+    case "End":        e.preventDefault(); stopPlay(); gotoNode(currentRun ? currentRun.nodes.length - 1 : 0); break;
+    case "r": case "R": e.preventDefault(); resetPlotZoom(); break;
+  }
+});
+
+/* ═══════════════════════════════════════════════════════════
+   INITIAL RENDER
+   ═══════════════════════════════════════════════════════════ */
+try {
+  render(document.getElementById("modelInput").value);
+} catch(e){
+  console.error("Erro na renderização inicial:", e);
+  showError("Erro ao iniciar: " + e.message);
+}
+</script>
+</body>
+</html>
