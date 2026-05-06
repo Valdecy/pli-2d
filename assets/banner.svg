@@ -1,0 +1,64 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="420" viewBox="0 0 1400 420" role="img" aria-label="PLI-2D banner">
+  <defs>
+    <linearGradient id="bg" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0%" stop-color="#05080f"/>
+      <stop offset="100%" stop-color="#0b1220"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0" x2="1">
+      <stop offset="0%" stop-color="#00d4ff"/>
+      <stop offset="50%" stop-color="#ffd166"/>
+      <stop offset="100%" stop-color="#ff4d6d"/>
+    </linearGradient>
+    <filter id="glow" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="8" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  <rect width="1400" height="420" fill="url(#bg)"/>
+  <g opacity="0.12">
+    <path d="M0 360 L1400 80" stroke="#00d4ff" stroke-width="2"/>
+    <path d="M0 300 L1400 20" stroke="#ffffff" stroke-width="1"/>
+    <path d="M0 240 L1400 -40" stroke="#ffd166" stroke-width="2"/>
+    <path d="M0 420 L1400 140" stroke="#ff4d6d" stroke-width="2"/>
+    <path d="M200 0 L200 420 M420 0 L420 420 M640 0 L640 420 M860 0 L860 420 M1080 0 L1080 420 M1300 0 L1300 420" stroke="#ffffff" stroke-width="1"/>
+  </g>
+
+  <g transform="translate(78,74)">
+    <text x="0" y="0" fill="#ffd166" font-family="Arial, Helvetica, sans-serif" font-size="18" font-weight="700" letter-spacing="4">INTEGER LINEAR PROGRAMMING VISUALIZER</text>
+    <text x="0" y="74" fill="#ffffff" font-family="Arial, Helvetica, sans-serif" font-size="78" font-weight="800">PLI-2D</text>
+    <text x="0" y="126" fill="#a8b4d8" font-family="Arial, Helvetica, sans-serif" font-size="28">Interactive 2D Branch &amp; Bound exploration for teaching and learning</text>
+
+    <g transform="translate(0,182)">
+      <rect x="0" y="0" rx="24" ry="24" width="208" height="46" fill="#0f1a2f" stroke="#00d4ff"/>
+      <text x="104" y="30" text-anchor="middle" fill="#e8eeff" font-family="Arial, Helvetica, sans-serif" font-size="20" font-weight="700">Max / Min models</text>
+
+      <rect x="226" y="0" rx="24" ry="24" width="250" height="46" fill="#0f1a2f" stroke="#ffd166"/>
+      <text x="351" y="30" text-anchor="middle" fill="#e8eeff" font-family="Arial, Helvetica, sans-serif" font-size="20" font-weight="700">Integer / continuous vars</text>
+
+      <rect x="494" y="0" rx="24" ry="24" width="208" height="46" fill="#0f1a2f" stroke="#ff4d6d"/>
+      <text x="598" y="30" text-anchor="middle" fill="#e8eeff" font-family="Arial, Helvetica, sans-serif" font-size="20" font-weight="700">Step-by-step tree</text>
+    </g>
+  </g>
+
+  <g transform="translate(930,68)">
+    <rect x="0" y="0" width="380" height="250" rx="24" fill="#0d1528" stroke="#1e2b4a"/>
+    <rect x="22" y="22" width="110" height="206" rx="16" fill="#0a1120" stroke="#213252"/>
+    <rect x="150" y="22" width="208" height="206" rx="16" fill="#0a1120" stroke="#213252"/>
+
+    <text x="42" y="48" fill="#ffffff" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700">MODEL</text>
+    <text x="42" y="78" fill="#00d4ff" font-family="Courier New, monospace" font-size="12">max = 17x1 + 12x2</text>
+    <text x="42" y="102" fill="#a8b4d8" font-family="Courier New, monospace" font-size="12">10x1 + 7x2 &lt;= 40</text>
+    <text x="42" y="126" fill="#a8b4d8" font-family="Courier New, monospace" font-size="12">x1 + x2 &lt;= 5</text>
+    <text x="42" y="150" fill="#ffd166" font-family="Courier New, monospace" font-size="12">x1, x2 ∈ I</text>
+
+    <rect x="173" y="52" width="154" height="116" rx="10" fill="#08111f" stroke="#2a3f66"/>
+    <path d="M186 150 L210 132 L232 120 L250 100 L278 84 L314 68" stroke="url(#accent)" stroke-width="4" fill="none" filter="url(#glow)"/>
+    <path d="M188 64 L188 150 L326 150" stroke="#5d6d94" stroke-width="2" fill="none"/>
+    <circle cx="250" cy="100" r="6" fill="#ffd166"/>
+    <circle cx="278" cy="84" r="6" fill="#ff4d6d"/>
+    <text x="174" y="186" fill="#e8eeff" font-family="Arial, Helvetica, sans-serif" font-size="12">Feasible region, LP optimum, integer points</text>
+
+    <circle cx="205" cy="205" r="10" fill="#ffd166"/><text x="222" y="210" fill="#e8eeff" font-family="Arial, Helvetica, sans-serif" font-size="13">LP node</text>
+    <circle cx="285" cy="205" r="10" fill="#ff4d6d"/><text x="302" y="210" fill="#e8eeff" font-family="Arial, Helvetica, sans-serif" font-size="13">Best integer</text>
+  </g>
+</svg>

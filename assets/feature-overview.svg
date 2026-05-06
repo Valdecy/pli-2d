@@ -1,0 +1,60 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="760" viewBox="0 0 1200 760" role="img" aria-label="PLI-2D feature overview">
+  <defs>
+    <linearGradient id="bg2" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0%" stop-color="#070b14"/>
+      <stop offset="100%" stop-color="#0d1528"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="760" fill="url(#bg2)"/>
+  <text x="60" y="70" fill="#ffffff" font-family="Arial, Helvetica, sans-serif" font-size="42" font-weight="800">What PLI-2D shows</text>
+  <text x="60" y="112" fill="#a8b4d8" font-family="Arial, Helvetica, sans-serif" font-size="24">A compact view of the workflow from mathematical model to Branch &amp; Bound interpretation.</text>
+
+  <g transform="translate(60,160)">
+    <rect width="320" height="230" rx="22" fill="#0f182a" stroke="#223457"/>
+    <text x="26" y="40" fill="#ffd166" font-family="Arial, Helvetica, sans-serif" font-size="26" font-weight="700">1. Define the model</text>
+    <text x="26" y="80" fill="#e8eeff" font-family="Courier New, monospace" font-size="18">max = 17x1 + 12x2</text>
+    <text x="26" y="112" fill="#e8eeff" font-family="Courier New, monospace" font-size="18">10x1 + 7x2 &lt;= 40</text>
+    <text x="26" y="144" fill="#e8eeff" font-family="Courier New, monospace" font-size="18">x1 + x2 &lt;= 5</text>
+    <text x="26" y="176" fill="#00d4ff" font-family="Courier New, monospace" font-size="18">x1; x2 ∈ I</text>
+    <text x="26" y="210" fill="#a8b4d8" font-family="Arial, Helvetica, sans-serif" font-size="16">Supports max/min and integer or continuous declarations.</text>
+  </g>
+
+  <g transform="translate(440,160)">
+    <rect width="320" height="230" rx="22" fill="#0f182a" stroke="#223457"/>
+    <text x="26" y="40" fill="#00d4ff" font-family="Arial, Helvetica, sans-serif" font-size="26" font-weight="700">2. Inspect geometry</text>
+    <rect x="26" y="62" width="268" height="132" rx="14" fill="#0a1120" stroke="#28406a"/>
+    <path d="M48 174 L48 82 L268 82" stroke="#53658d" stroke-width="2" fill="none"/>
+    <polygon points="68,170 68,132 118,100 200,100 168,170" fill="rgba(0,229,160,0.25)" stroke="#00e5a0" stroke-width="2"/>
+    <circle cx="168" cy="100" r="7" fill="#ffd166"/>
+    <circle cx="118" cy="132" r="5" fill="#a78bfa"/>
+    <text x="26" y="215" fill="#a8b4d8" font-family="Arial, Helvetica, sans-serif" font-size="16">View halfspaces, feasible region, vertices, integer points, and the LP solution.</text>
+  </g>
+
+  <g transform="translate(820,160)">
+    <rect width="320" height="230" rx="22" fill="#0f182a" stroke="#223457"/>
+    <text x="26" y="40" fill="#ff4d6d" font-family="Arial, Helvetica, sans-serif" font-size="26" font-weight="700">3. Follow the tree</text>
+    <circle cx="160" cy="78" r="16" fill="#ffd166"/>
+    <line x1="160" y1="94" x2="90" y2="145" stroke="#6a7aac" stroke-width="3"/>
+    <line x1="160" y1="94" x2="230" y2="145" stroke="#6a7aac" stroke-width="3"/>
+    <circle cx="90" cy="145" r="16" fill="#00d4ff"/>
+    <circle cx="230" cy="145" r="16" fill="#00d4ff"/>
+    <line x1="90" y1="161" x2="60" y2="205" stroke="#6a7aac" stroke-width="3"/>
+    <line x1="90" y1="161" x2="120" y2="205" stroke="#6a7aac" stroke-width="3"/>
+    <circle cx="60" cy="205" r="14" fill="#ff4d6d"/>
+    <circle cx="120" cy="205" r="14" fill="#ffd166"/>
+    <text x="26" y="238" fill="#a8b4d8" font-family="Arial, Helvetica, sans-serif" font-size="16">Play step by step, inspect nodes, compare bounds, and understand how the incumbent changes.</text>
+  </g>
+
+  <g transform="translate(60,450)">
+    <rect width="1080" height="220" rx="22" fill="#0f182a" stroke="#223457"/>
+    <text x="30" y="46" fill="#ffffff" font-family="Arial, Helvetica, sans-serif" font-size="28" font-weight="800">Core capabilities</text>
+    <g fill="#e8eeff" font-family="Arial, Helvetica, sans-serif" font-size="22">
+      <text x="40" y="96">• 2D visualization of linear constraints and feasible regions</text>
+      <text x="40" y="136">• Branch &amp; Bound animation with node-by-node navigation</text>
+      <text x="40" y="176">• LP relaxation, incumbent tracking, and gap display</text>
+      <text x="570" y="96">• Manual axis scaling, zoom, and plot inspection</text>
+      <text x="570" y="136">• Toggle layers for lines, regions, vertices, and integer points</text>
+      <text x="570" y="176">• PNG and SVG export for slides, classes, and reports</text>
+    </g>
+  </g>
+</svg>
