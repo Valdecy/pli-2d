@@ -14,6 +14,19 @@
 
 [PLI-2D](https://valdecy.github.io/pli-2d/)
 
+Example model:
+
+```text
+max = 17x1 + 12x2
+s.t
+10x1 + 7x2 <= 40
+1x1 + 1x2 <= 5
+x1; x2 ∈ I
+```
+
+---
+
+
 ## Overview
 
 **PLI-2D** is an interactive educational tool for exploring **Integer Linear Programming (ILP)** in two dimensions. It lets the user define a model, inspect the feasible region, visualize the LP relaxation, and follow the **Branch & Bound** process step by step.
@@ -86,17 +99,3 @@ The tool follows a simple workflow:
 This makes the algorithm easier to understand than a purely textual solver log.
 
 ---
-
-## Example model
-
-```text
-max = 17x1 + 12x2
-s.t
-10x1 + 7x2 <= 40
-1x1 + 1x2 <= 5
-x1; x2 ∈ I
-```
-
----
-
-
