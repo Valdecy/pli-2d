@@ -21,7 +21,7 @@
 The current interface already includes support for **max/min models**, **integer and continuous variable declarations**, **layer toggles**, **node-by-node animation**, **zoom and axis control**, and **PNG/SVG export**.
 
 <p align="center">
-  <img src="assets/feature-overview.svg" alt="PLI-2D feature overview" width="300" />
+  <img src="assets/feature-overview.svg" alt="PLI-2D feature overview" width="700" />
 </p>
 
 ---
