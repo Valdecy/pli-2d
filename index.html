@@ -1063,7 +1063,7 @@ input[type="range"]::-moz-range-thumb {
       <div class="section">
         <div class="section-label">Model</div>
         <textarea class="code-input" id="modelInput" spellcheck="false">max = 17x1 + 12x2
-s.a
+s.t.
 10x1 + 7x2 <= 40
 1x1 + 1x2 <= 5
 x1; x2 ∈ I</textarea>
@@ -1338,6 +1338,7 @@ let lastAutoPlotDomain = null;
 let currentPlotGeometry = null;
 let plotSelection = null;
 let suppressPlotClick = false;
+const DEFAULT_PLOT_READOUT = "Click any region, line, vertex, or point to inspect values.\nYou can also click the background to read coordinates and the objective-function value.";
 
 /* ═══════════════════════════════════════════════════════════
    PARSER
@@ -2018,7 +2019,7 @@ function describeClickedCoordinate(x, y, node, hsNode){
   const nearestFeasible = feasible(nearest, hsNode);
   return [
     `Selected point: x₁=${fmt(x)}, x₂=${fmt(y)}`,
-    `Objetivo (${currentModel.sense}): z=${fmt(z)}`,
+    `Objective (${currentModel.sense}): z=${fmt(z)}`,
     `Global region: ${inRoot ? "feasible" : "outside the region"}`,
     `Region of node ${node.id}: ${inNode ? "feasible" : "outside the region"}`,
     `Nearest integer: (${nearest.x}, ${nearest.y}) · ${nearestFeasible ? "feasible in this node" : "not feasible in this node"}`
@@ -2126,7 +2127,7 @@ ${h.raw}`;
   }
 
   if(polyRoot.length >= 3){
-    out.push(`<polygon class="inspectable" data-click-info="${escapeAttr(`Global feasible region\nPolígono do relaxamento linear na root.`)}" points="${polyRoot.map(p=>`${X(p.x)},${Y(p.y)}`).join(" ")}" fill="rgba(0,229,160,0.15)" stroke="rgba(0,229,160,0.6)" stroke-width="1.8"/>`);
+    out.push(`<polygon class="inspectable" data-click-info="${escapeAttr(`Global feasible region\nPolygon of the LP relaxation at the root.`)}" points="${polyRoot.map(p=>`${X(p.x)},${Y(p.y)}`).join(" ")}" fill="rgba(0,229,160,0.15)" stroke="rgba(0,229,160,0.6)" stroke-width="1.8"/>`);
   }
 
   if(showNodeRegion && polyNode.length >= 3){
@@ -2395,7 +2396,10 @@ function updatePanels(){
 
   document.getElementById("nodeTags").innerHTML = tags.join("");
   document.getElementById("traceBox").textContent = buildTraceText(node);
-  document.getElementById("nodeIndexPill").textContent = `Node ${currentNode} / ${Math.max(0, currentRun.nodes.length-1)}`;
+  const naturalOrder = getNaturalNodeOrder();
+  const naturalPos = Math.max(0, naturalOrder.indexOf(currentNode));
+  const maxNodeId = currentRun.nodes.reduce((m, n) => Math.max(m, Number.isFinite(Number(n.id)) ? Number(n.id) : m), 0);
+  document.getElementById("nodeIndexPill").textContent = `Node ${node.id} · ${naturalPos} / ${Math.max(0, naturalOrder.length - 1)} · max label ${maxNodeId}`;
   document.getElementById("prevBtn").disabled = currentNode === 0;
   document.getElementById("nextBtn").disabled = currentNode === currentRun.nodes.length - 1;
   document.getElementById("nodeSlider").value = String(currentNode);
@@ -2406,6 +2410,20 @@ function drawAll(){
   drawTree();
   drawLog();
   updatePanels();
+}
+
+function getNaturalNodeOrder(){
+  if(!currentRun || !Array.isArray(currentRun.nodes)) return [];
+  return currentRun.nodes
+    .map((node, idx) => ({ idx, id: Number(node.id) }))
+    .sort((a, b) => {
+      if (Number.isFinite(a.id) && Number.isFinite(b.id) && a.id !== b.id) return a.id - b.id;
+      if (String(currentRun.nodes[a.idx].id) !== String(currentRun.nodes[b.idx].id)) {
+        return String(currentRun.nodes[a.idx].id).localeCompare(String(currentRun.nodes[b.idx].id), undefined, { numeric: true, sensitivity: "base" });
+      }
+      return a.idx - b.idx;
+    })
+    .map(item => item.idx);
 }
 
 /* ═══════════════════════════════════════════════════════════
@@ -2419,19 +2437,40 @@ function stopPlay(){
 function togglePlay(){
   if(playTimer){ stopPlay(); return; }
   if(!currentRun || currentRun.nodes.length <= 1) return;
-  if(currentNode >= currentRun.nodes.length - 1) return;
+
+  const naturalOrder = getNaturalNodeOrder();
+  const currentPos = naturalOrder.indexOf(currentNode);
+  if(currentPos < 0 || currentPos >= naturalOrder.length - 1) return;
+
   document.getElementById("playBtn").textContent = "❚❚ Pause";
   playTimer = setInterval(() => {
-    if(currentNode >= currentRun.nodes.length - 1){ stopPlay(); return; }
-    currentNode += 1;
-    drawAll();
+    const order = getNaturalNodeOrder();
+    const pos = order.indexOf(currentNode);
+    if(pos < 0 || pos >= order.length - 1){
+      stopPlay();
+      return;
+    }
+    const nextIdx = order[pos + 1];
+    gotoNode(nextIdx, { clearSelection: true, resetViewport: true, resetReadout: true });
+    const newPos = order.indexOf(currentNode);
+    if(newPos >= order.length - 1){
+      stopPlay();
+    }
   }, playInterval);
 }
 
-function gotoNode(idx){
+function gotoNode(idx, options = {}){
   if(!currentRun) return;
+  const {
+    clearSelection = true,
+    resetViewport = false,
+    resetReadout = true
+  } = options;
   const max = currentRun.nodes.length - 1;
   currentNode = Math.max(0, Math.min(max, idx));
+  if(clearSelection) plotSelection = null;
+  if(resetViewport) plotViewDomain = null;
+  if(resetReadout) setPlotReadout(DEFAULT_PLOT_READOUT);
   drawAll();
 }
 
@@ -2462,7 +2501,7 @@ function render(modelText){
     lastAutoPlotDomain = inferPlotDomain(model, currentRun.nodes[0], root);
     updateAxisInputPlaceholders(lastAutoPlotDomain);
   }
-  setPlotReadout("Click any region, line, vertex, or point to inspect values.\nYou can also click the background to read coordinates and the objective-function value.");
+  setPlotReadout(DEFAULT_PLOT_READOUT);
 
   // Stats
   document.getElementById("bestZ").textContent = currentRun.incumbent.point ? fmt(currentRun.incumbent.value) : "—";
@@ -2528,7 +2567,7 @@ function exportSVG(){
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
-  a.download = "pli_2d_visualizacao.svg";
+  a.download = "pli_2d_visualization.svg";
   a.click();
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
@@ -2551,7 +2590,7 @@ function exportPNG(){
     canvas.toBlob(blob2 => {
       const a = document.createElement("a");
       a.href = URL.createObjectURL(blob2);
-      a.download = "pli_2d_visualizacao.png";
+      a.download = "pli_2d_visualization.png";
       a.click();
       setTimeout(() => URL.revokeObjectURL(a.href), 1000);
     }, "image/png");
@@ -2627,7 +2666,7 @@ function applyAxesFromInputs(){
     ymax: candidate.ymax ?? autoDomain.ymax
   };
   if(!(effective.xmin < effective.xmax) || !(effective.ymin < effective.ymax)){
-    alert("Os limites dos eixos precisam obedecer mín < máx.");
+    alert("Axis limits must satisfy min < max.");
     return;
   }
   axisDomainOverride = candidate;
@@ -2683,17 +2722,17 @@ document.getElementById("runBtn").onclick = () => {
 
 document.getElementById("demoBtn").onclick = () => {
   document.getElementById("modelInput").value = `max = 17x1 + 12x2
-s.a
+s.t.
 10x1 + 7x2 <= 40
 x1 + x2 <= 5
 x1; x2 ∈ I`;
   render(document.getElementById("modelInput").value);
 };
 
-document.getElementById("prevBtn").onclick = () => { stopPlay(); gotoNode(currentNode - 1); };
-document.getElementById("nextBtn").onclick = () => { stopPlay(); gotoNode(currentNode + 1); };
+document.getElementById("prevBtn").onclick = () => { stopPlay(); gotoNode(currentNode - 1, { clearSelection: true, resetReadout: true }); };
+document.getElementById("nextBtn").onclick = () => { stopPlay(); gotoNode(currentNode + 1, { clearSelection: true, resetReadout: true }); };
 document.getElementById("playBtn").onclick = togglePlay;
-document.getElementById("nodeSlider").oninput = e => { stopPlay(); gotoNode(Number(e.target.value)); };
+document.getElementById("nodeSlider").oninput = e => { stopPlay(); gotoNode(Number(e.target.value), { clearSelection: true, resetReadout: true }); };
 
 document.getElementById("speedSelect").onchange = e => {
   playInterval = Number(e.target.value);
@@ -2728,12 +2767,12 @@ bindPlotInspector();
 // Delegated click handlers
 document.getElementById("treeSvg").addEventListener("click", (e) => {
   const g = e.target.closest(".tree-node");
-  if(g){ stopPlay(); gotoNode(Number(g.getAttribute("data-node-idx"))); }
+  if(g){ stopPlay(); gotoNode(Number(g.getAttribute("data-node-idx")), { clearSelection: true, resetReadout: true }); }
 });
 
 document.getElementById("logBox").addEventListener("click", (e) => {
   const row = e.target.closest(".log-row");
-  if(row){ stopPlay(); gotoNode(Number(row.getAttribute("data-node-idx"))); }
+  if(row){ stopPlay(); gotoNode(Number(row.getAttribute("data-node-idx")), { clearSelection: true, resetReadout: true }); }
 });
 
 // Keyboard shortcuts
@@ -2757,11 +2796,11 @@ document.addEventListener("keydown", (e) => {
   if(tag === "SELECT") return;
 
   switch(e.key){
-    case "ArrowLeft":  e.preventDefault(); stopPlay(); gotoNode(currentNode - 1); break;
-    case "ArrowRight": e.preventDefault(); stopPlay(); gotoNode(currentNode + 1); break;
+    case "ArrowLeft":  e.preventDefault(); stopPlay(); gotoNode(currentNode - 1, { clearSelection: true, resetReadout: true }); break;
+    case "ArrowRight": e.preventDefault(); stopPlay(); gotoNode(currentNode + 1, { clearSelection: true, resetReadout: true }); break;
     case " ":          e.preventDefault(); togglePlay(); break;
-    case "Home":       e.preventDefault(); stopPlay(); gotoNode(0); break;
-    case "End":        e.preventDefault(); stopPlay(); gotoNode(currentRun ? currentRun.nodes.length - 1 : 0); break;
+    case "Home":       e.preventDefault(); stopPlay(); gotoNode(0, { clearSelection: true, resetReadout: true }); break;
+    case "End":        e.preventDefault(); stopPlay(); gotoNode(currentRun ? currentRun.nodes.length - 1 : 0, { clearSelection: true, resetReadout: true }); break;
     case "r": case "R": e.preventDefault(); resetPlotZoom(); break;
   }
 });
