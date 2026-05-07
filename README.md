@@ -80,7 +80,6 @@ PLI-2D is especially valuable for:
 - **Operations Research** and **Optimization** courses
 - explaining the difference between **LP relaxation** and **integer solutions**
 - demonstrating how **Branch & Bound** explores and prunes the search tree
-- building intuition before introducing solvers such as CBC, GLPK, Gurobi, or CPLEX
 - creating visual material for lectures, presentations, and tutorials
 
 ---
